@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+
+<body>
+  <header class="admin-header">
+    <h1>Admin Dashboard</h1>
+  </header>
+
+  <main class="admin-content">
+    <section id="jobsModule" class="admin-card">
+      <h2>Jobs verwalten</h2>
+
+      <div class="admin-hero">
+        <p class="admin-hero-title">Neue Stelle anlegen – in 4 Schritten</p>
+        <p class="admin-hero-sub">
+          Trage die Basisdaten ein, ergänze Inhalt, setze „Veröffentlicht“ und prüfe unten den Textvorschlag.
+        </p>
+      </div>
+
+      <form id="jobsForm" class="admin-form" autocomplete="off">
+        <div class="admin-flow">
+          <!-- Schritt 1 -->
+          <div class="admin-subcard">
+            <h3>1) Basis</h3>
+            <p class="admin-subhint">Titel, Art, Stunden und Ort – das sind die Pflichtinfos für die Anzeige.</p>
+
+            <div class="admin-grid">
+              <div>
+                <label for="jobTitle">Titel *</label>
+                <input id="jobTitle" type="text" placeholder="z. B. Reinigungskraft (m/w/d)" required>
+              </div>
+
+              <div>
+                <label for="jobType">Art *</label>
+                <select id="jobType" required>
+                  <option value="">Bitte wählen…</option>
+                  <option value="minijob">Minijob</option>
+                  <option value="teilzeit">Teilzeit</option>
+                  <option value="vollzeit">Vollzeit</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="jobHours">Stunden/Woche</label>
+                <input id="jobHours" type="text" placeholder="z. B. 32">
+              </div>
+
+              <div>
+                <label for="jobLocation">Ort/Region *</label>
+                <input id="jobLocation" type="text" placeholder="z. B. Königs Wusterhausen / Berlin" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- Schritt 2 -->
+          <div class="admin-subcard">
+            <h3>2) Inhalt</h3>
+            <p class="admin-subhint">Stichpunkte reichen – der Textvorschlag wird automatisch daraus gebaut.</p>
+
+            <label for="jobTasks">Aufgaben</label>
+            <textarea id="jobTasks" rows="3" placeholder="- Unterhaltsreinigung&#10;- Treppenhaus&#10;- Fenster (nach Absprache)"></textarea>
+
+            <label for="jobReq">Anforderungen</label>
+            <textarea id="jobReq" rows="3" placeholder="- Zuverlässigkeit&#10;- Sorgfalt&#10;- Freundliches Auftreten"></textarea>
+
+            <label for="jobBenefits">Wir bieten</label>
+            <textarea id="jobBenefits" rows="3" placeholder="- Feste Objekte&#10;- Pünktliche Bezahlung&#10;- Einarbeitung"></textarea>
+          </div>
+
+          <!-- Schritt 3 -->
+          <div class="admin-subcard">
+            <h3>3) Veröffentlichung</h3>
+            <p class="admin-subhint">Kontaktinfo optional – „Veröffentlicht“ entscheidet, ob die Stelle später sichtbar ist.</p>
+
+            <div class="admin-grid">
+              <div>
+                <label for="jobContact">Kontakt</label>
+                <input id="jobContact" type="text" placeholder="z. B. Bewerbung über Kontaktseite oder Telefon">
+              </div>
+
+              <div class="admin-inline">
+                <input id="jobPublished" type="checkbox">
+                <label for="jobPublished">Veröffentlicht</label>
+              </div>
+            </div>
+
+            <div class="admin-actions">
+              <button id="jobSaveBtn" type="submit" class="btn-primary">Job speichern</button>
+              <button id="jobResetBtn" type="button" class="btn-secondary">Zurücksetzen</button>
+            </div>
+          </div>
+
+          <!-- Schritt 4 -->
+          <div class="admin-subcard admin-preview">
+            <h3>4) Textvorschlag</h3>
+            <p class="admin-subhint">So erscheint der Job als fertige Anzeige. Bei Bedarf kopieren.</p>
+
+            <textarea id="jobPreview" rows="8" readonly></textarea>
+
+            <div class="admin-actions">
+              <button id="copyPreviewBtn" type="button" class="btn-secondary">Text kopieren</button>
+            </div>
+          </div>
+        </div>
+
+        <hr>
+
+        <h3>Gespeicherte Jobs</h3>
+        <div id="jobsList"></div>
+      </form>
+    </section>
+  </main>
+
+  <script src="admin.js"></script>
+  <script src="modules/jobs.js"></script>
+</body>
+</html>

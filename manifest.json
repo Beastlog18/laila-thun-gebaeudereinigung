@@ -1,0 +1,15 @@
+{
+  "name": "Laila Thun Gebäudereinigung",
+  "short_name": "LT Reinigung",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#00509e",
+  "icons": [
+    {
+      "src": "img/logo.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}

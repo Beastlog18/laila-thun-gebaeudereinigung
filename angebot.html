@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Angebot – Laila Thun Gebäudereinigung</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="header">
+  <img src="img/Logo.png" class="header-logo" alt="Logo">
+
+  <div class="brand-header">
+    <div class="brand-line1">LAILA THUN</div>
+    <div class="brand-line2">GEBÄUDEREINIGUNG</div>
+    <div class="brand-divider"></div>
+  </div>
+
+  <nav class="nav">
+    <a href="index.html">Home</a>
+    <a href="ueber-uns.html">Über uns</a>
+    <a href="leistungen.html">Leistungen</a>
+    <a href="kontakt.html">Kontakt</a>
+    <a href="jobs.html">Jobs</a>
+  </nav>
+</header>
+
+<section class="section">
+  <h1 class="page-title">Angebot anfragen</h1>
+
+  <p class="mb-18">
+    Du möchtest ein unverbindliches Angebot? Beschreibe kurz, worum es geht – wir melden uns schnellstmöglich bei dir zurück.
+  </p>
+
+  <form class="contact-form" enctype="multipart/form-data">
+    <label>Art der Reinigung</label>
+    <select required>
+      <option value="">Bitte wählen…</option>
+      <option>Unterhaltsreinigung</option>
+      <option>Glas- & Fensterreinigung</option>
+      <option>Büroreinigung</option>
+      <option>Grundreinigung</option>
+      <option>Sanitärreinigung</option>
+      <option>Treppenhausreinigung</option>
+      <option>Sonstiges</option>
+    </select>
+
+    <label>Adresse / Ort (optional)</label>
+    <input type="text" placeholder="z. B. Königs Wusterhausen, Berlin">
+
+    <label>Name</label>
+    <input type="text" required>
+
+    <label>E-Mail</label>
+    <input type="email" required>
+
+    <label>Telefon (optional)</label>
+    <input type="text">
+
+    <label>Kurze Beschreibung</label>
+    <textarea rows="6" required placeholder="Größe, Räume, gewünschter Zeitraum, Besonderheiten…"></textarea>
+
+    <label>Bilder (optional)</label>
+    <input type="file" multiple>
+
+    <label class="mt-14">
+      <input type="checkbox" required>
+      Ich habe die <a href="datenschutz.html" target="_blank">Datenschutzerklärung</a> gelesen
+      und stimme der Verarbeitung meiner Daten zu.
+    </label>
+
+    <button class="btn btn-primary btn-block mt-16" type="submit">
+      Anfrage senden
+    </button>
+  </form>
+
+  <p class="mt-14 text-small text-muted">
+    Hinweis: In dieser Offline-Version wird das Formular noch nicht automatisch per E-Mail versendet.
+    Den Versand (E-Mail/Backend) bauen wir als nächsten technischen Schritt sauber ein.
+  </p>
+</section>
+
+<footer class="footer">
+  <div>© 2026 Laila Thun Gebäudereinigung · Konzept & Gestaltung: Mayk Freund</div>
+  <div class="footer-links">
+    <a href="impressum.html">Impressum</a>
+    <span>·</span>
+    <a href="datenschutz.html">Datenschutz</a>
+  </div>
+</footer>
+
+</body>
+</html>
