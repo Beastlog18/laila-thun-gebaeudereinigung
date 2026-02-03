@@ -127,6 +127,17 @@ body {
   background: #003f7d;
 }
 
+/* ✅ NEU (nur Ergänzung, ohne bestehendes zu ändern) */
+.btn-secondary {
+  background: #ffffff;
+  border: 1px solid #00509e;
+  color: #00509e;
+}
+
+.btn-secondary:hover {
+  background: #e6f0fa;
+}
+
 /* --------------------------------------------- */
 /* PAGE TITLES                                   */
 /* --------------------------------------------- */
@@ -141,6 +152,15 @@ body {
 .btn-block {
   width: 100%;
   margin-top: 15px;
+}
+
+/* ✅ NEU (nur Ergänzung) */
+.page-intro {
+  max-width: 760px;
+  margin: 0 auto 28px auto;
+  text-align: center;
+  color: #333;
+  font-size: 16px;
 }
 
 /* --------------------------------------------- */
@@ -194,6 +214,40 @@ body {
   margin-bottom: 8px;
 }
 
+/* ✅ NEU (nur Ergänzung) */
+.service-small {
+  font-size: 14px;
+  color: #555;
+  margin-top: 6px;
+}
+
+/* ✅ NEU (CTA-Box unter Leistungen, nur Ergänzung) */
+.cta-box {
+  margin-top: 40px;
+  padding: 26px;
+  background: rgba(255, 255, 255, 0.75);
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+.cta-title {
+  color: #003f7d;
+  margin-bottom: 10px;
+}
+
+.cta-text {
+  color: #333;
+  margin-bottom: 18px;
+}
+
+.cta-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
 /* --------------------------------------------- */
 /* ÜBER UNS                                     */
 /* --------------------------------------------- */
@@ -209,6 +263,16 @@ body {
   width: 100%;
   border-radius: 10px;
   box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+}
+
+/* ✅ NEU (About-Listen ohne Inline-Styles) */
+.about-list {
+  padding-left: 18px;
+  color: #333;
+}
+
+.about-list li {
+  margin-bottom: 6px;
 }
 
 /* --------------------------------------------- */

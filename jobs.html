@@ -30,34 +30,60 @@
 <section class="section">
   <h1 class="page-title">Jobs</h1>
 
-  <p class="mb-18">
-    Wir wachsen – und freuen uns über Unterstützung. Hier werden offene Stellen veröffentlicht.
+  <p class="page-intro">
+    Wir wachsen – bewusst und Schritt für Schritt.
+    Um unsere gewerblichen Kunden zuverlässig betreuen zu können,
+    bauen wir unser Team weiter aus.
+    <br><br>
+    Wenn du zuverlässig bist, sauber arbeitest und gern im direkten Kontakt mit Menschen stehst,
+    bist du bei uns richtig. Erfahrung ist hilfreich, aber kein Muss – wichtig ist,
+    dass es menschlich passt.
   </p>
 
-  <!-- DYNAMISCHE JOBS -->
-  <div id="jobsDynamic" class="service-grid" style="display:none;"></div>
+  <!-- DYNAMISCHE JOBS (Admin-Ausbau) -->
+  <div id="jobsDynamic" class="service-grid"></div>
 
-  <!-- FALLBACK (statisch) -->
-  <div id="jobsFallback" class="service-grid">
-    <div class="service-card">
-      <h3>Reinigungskraft (m/w/d)</h3>
-      <p>Teilzeit / Minijob · Raum Königs Wusterhausen / Berlin</p>
-      <p class="mt-14">
-        Zuverlässig, freundlich, gründlich. Erfahrung ist gut, aber nicht zwingend – wir arbeiten dich ein.
+  <!-- INITIATIVBEWERBUNG – IMMER SICHTBAR -->
+  <div class="service-grid mt-20">
+    <div class="service-card" style="grid-column: 1 / -1;">
+      <h3>Initiativbewerbung (m/w/d)</h3>
+
+      <p class="mt-10 text-muted">
+        Wir arbeiten überwiegend im <strong>südlichen Berlin</strong> sowie im <strong>Berliner Umland</strong> –
+        unter anderem in <strong>Großbeeren</strong>, <strong>Wildau</strong>,
+        <strong>Schulzendorf</strong> und rund um <strong>Königs Wusterhausen</strong>.
+        Bei passenden Anfragen sind auch andere Regionen möglich.
       </p>
-      <div class="mt-14">
+
+      <p class="mt-14">
+        Auch wenn gerade keine konkrete Stelle ausgeschrieben ist,
+        freuen wir uns jederzeit über Menschen, die zu uns passen.
+        <br><br>
+        Sag uns einfach kurz, wann du verfügbar bist, in welcher Region du arbeiten möchtest
+        und ob du bereits Erfahrung in der Reinigung hast.
+      </p>
+
+      <ul class="about-list mt-14">
+        <li>Zuverlässige Einarbeitung und feste Absprachen</li>
+        <li>Persönlicher Kontakt – kein anonymer Großbetrieb</li>
+        <li>Einsatzzeiten nach Absprache</li>
+        <li>Langfristige Zusammenarbeit gewünscht</li>
+      </ul>
+
+      <div class="mt-16">
         <a class="btn btn-primary" href="kontakt.html">Jetzt bewerben</a>
       </div>
     </div>
   </div>
 
-  <p class="mt-16 text-small text-muted">
-    Hinweis: Das Bewerbungsformular (Upload Lebenslauf etc.) wird im Admin-Ausbau ergänzt.
+  <p class="mt-20 text-small text-muted text-center">
+    Hinweis: Konkrete Stellenangebote sowie ein eigenes Bewerbungsformular
+    (z. B. mit Lebenslauf-Upload) werden im nächsten Ausbauschritt ergänzt.
   </p>
 </section>
 
 <footer class="footer">
-  <div>© 2026 Laila Thun Gebäudereinigung · Konzept & Gestaltung: Mayk Freund</div>
+  <div>© 2026 Laila Thun Gebäudereinigung · Konzept &amp; Gestaltung: Mayk Freund</div>
   <div class="footer-links">
     <a href="impressum.html">Impressum</a>
     <span>·</span>
@@ -95,17 +121,13 @@
 
   function render() {
     const jobs = loadJobs().filter(j => j.published && j.preview);
-
     const dyn = document.getElementById("jobsDynamic");
-    const fb = document.getElementById("jobsFallback");
 
     if (!jobs.length) {
       dyn.style.display = "none";
-      fb.style.display = "grid";
       return;
     }
 
-    fb.style.display = "none";
     dyn.style.display = "grid";
     dyn.innerHTML = "";
 
@@ -120,9 +142,7 @@
       card.innerHTML = `
         <h3>${job.title || "Stellenangebot"}</h3>
         ${meta ? `<p>${meta}</p>` : ""}
-
         <pre class="mt-14" style="white-space:pre-wrap;font-family:inherit;">${bodyText}</pre>
-
         <div class="mt-14">
           <a class="btn btn-primary" href="kontakt.html">Jetzt bewerben</a>
         </div>
