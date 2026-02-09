@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+
+<body class="admin-dashboard">
+  <header class="admin-header admin-header-row">
+    <div>
+      <h1>Admin Dashboard</h1>
+      <p class="admin-header-sub">
+        Arbeitsstand: Admin Phase 0.4 · nicht live · Änderungen wirken lokal
+      </p>
+    </div>
+    <button id="logoutBtn" type="button" class="btn-secondary">Logout</button>
+  </header>
+
+  <main class="admin-content">
+    <!-- Globaler Hinweis (nur UX-Klarheit, keine Funktion) -->
+    <section class="admin-card admin-note-card" aria-label="Hinweis">
+      <h2>Hinweis</h2>
+      <p class="admin-note-text">
+        Dieser Admin-Bereich ist ein internes Arbeits- und Vorbereitungswerkzeug.
+        Es gibt <strong>keine</strong> Live-Anbindung an die öffentliche Webseite.
+        Änderungen und Status gelten <strong>nur lokal</strong> in diesem Browser.
+      </p>
+    </section>
+
+    <section id="jobsModule" class="admin-card">
+      <h2>Jobs verwalten</h2>
+
+      <div class="admin-hero">
+        <p class="admin-hero-title">Neue Stelle anlegen – in 4 Schritten</p>
+        <p class="admin-hero-sub">
+          Wähle die passende Rolle, ergänze optional Details und prüfe unten den Textvorschlag.
+        </p>
+      </div>
+
+      <form id="jobsForm" class="admin-form" autocomplete="off">
+        <div class="admin-flow">
+          <!-- Schritt 1 -->
+          <div class="admin-subcard">
+            <h3>1) Basis</h3>
+            <p class="admin-subhint">
+              Die Jobrolle bestimmt den Titel der Anzeige. Zusätze sind optional.
+            </p>
+
+            <div class="admin-grid">
+              <div>
+                <label for="jobTitle">Jobrolle *</label>
+                <select id="jobTitle" required>
+                  <option value="Reinigungskraft Gebäudereinigung (m/w/d)">Reinigungskraft Gebäudereinigung (m/w/d)</option>
+                  <option value="Aushilfe Gebäudereinigung (m/w/d)">Aushilfe Gebäudereinigung (m/w/d)</option>
+                  <option value="Mitarbeiter Reinigung (m/w/d)">Mitarbeiter Reinigung (m/w/d)</option>
+                  <option value="Reinigungskraft Privathaushalte (m/w/d)">Reinigungskraft Privathaushalte (m/w/d)</option>
+                  <option value="Haushaltshilfe / Reinigung Privat (m/w/d)">Haushaltshilfe / Reinigung Privat (m/w/d)</option>
+                  <option value="Baureinigung / Bauendreinigung (m/w/d)">Baureinigung / Bauendreinigung (m/w/d)</option>
+                  <option value="Glas- und Fensterreinigung (m/w/d)">Glas- und Fensterreinigung (m/w/d)</option>
+                  <option value="Vorarbeiter Reinigung (m/w/d)">Vorarbeiter Reinigung (m/w/d)</option>
+                  <option value="Objektleiter Reinigung (m/w/d)">Objektleiter Reinigung (m/w/d)</option>
+                  <option value="">Sonstiges / Freitext</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="jobTitleFree">Jobrolle (Freitext – nur bei „Sonstiges“)</label>
+                <input id="jobTitleFree" type="text" placeholder="z. B. Reinigungskraft Büro (m/w/d)" disabled>
+              </div>
+
+              <div>
+                <label for="jobTitleExtra">Zusatz (optional)</label>
+                <input id="jobTitleExtra" type="text" placeholder="z. B. Büroreinigung · Abends · Wildau">
+              </div>
+
+              <div>
+                <label for="jobType">Art *</label>
+                <select id="jobType" required>
+                  <option value="">Bitte wählen…</option>
+                  <option value="minijob">Minijob</option>
+                  <option value="teilzeit">Teilzeit</option>
+                  <option value="vollzeit">Vollzeit</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="jobHours">Stunden/Woche</label>
+                <input id="jobHours" type="text" placeholder="z. B. 32">
+              </div>
+
+              <div>
+                <label for="jobLocation">Ort/Region *</label>
+                <input id="jobLocation" type="text" placeholder="z. B. Wildau / Berlin" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- Schritt 2 -->
+          <div class="admin-subcard">
+            <h3>2) Inhalt</h3>
+            <p class="admin-subhint">
+              Stichpunkte reichen – der Autotext macht daraus eine saubere Anzeige.
+            </p>
+
+            <label for="jobTasks">Aufgaben</label>
+            <textarea id="jobTasks" rows="3"></textarea>
+
+            <label for="jobReq">Anforderungen</label>
+            <textarea id="jobReq" rows="3"></textarea>
+
+            <label for="jobBenefits">Wir bieten</label>
+            <textarea id="jobBenefits" rows="3"></textarea>
+          </div>
+
+          <!-- Schritt 3 -->
+          <div class="admin-subcard">
+            <h3>3) Veröffentlichung</h3>
+
+            <div class="admin-grid">
+              <div>
+                <label for="jobContact">Kontakt</label>
+                <input id="jobContact" type="text">
+              </div>
+
+              <div class="admin-inline">
+                <input id="jobPublished" type="checkbox">
+                <label for="jobPublished">Veröffentlicht</label>
+              </div>
+            </div>
+
+            <p class="admin-inline-note">
+              Hinweis: Dieser Status gilt nur im Admin (lokal). Es erfolgt keine Live-Veröffentlichung auf der öffentlichen Webseite.
+            </p>
+
+            <div class="admin-actions">
+              <button id="jobSaveBtn" type="submit" class="btn-primary">Job speichern</button>
+              <button id="jobResetBtn" type="button" class="btn-secondary">Zurücksetzen</button>
+            </div>
+          </div>
+
+          <!-- Schritt 4 -->
+          <div class="admin-subcard admin-preview">
+            <h3>4) Textvorschlag</h3>
+            <textarea id="jobPreview" rows="8" readonly></textarea>
+          </div>
+        </div>
+
+        <hr>
+
+        <h3>Gespeicherte Jobs</h3>
+        <div id="jobsList"></div>
+      </form>
+    </section>
+  </main>
+
+  <script src="admin.js"></script>
+
+  <!-- Phase 1: Supabase Client MUSS zuerst geladen werden -->
+  <script src="../api/supabase.client.js"></script>
+
+  <!-- Admin-Modul (zieht jobs.api.js per import() wenn wir jobs.js umstellen) -->
+  <script src="modules/jobs.js"></script>
+</body>
+</html>

@@ -1,0 +1,333 @@
+/* =========================================================
+   Admin UI – angelehnt an Website-Optik
+   (ruhig, klar, intern – keine Bild-Hintergründe)
+   ========================================================= */
+
+:root{
+  --blue-main:#00509e;
+  --blue-dark:#003f7d;
+
+  --bg-page:#f4f7fb;
+  --bg-card:#ffffff;
+  --bg-soft:#f8fafc;
+
+  --text-main:#1f2937;
+  --text-muted:#6b7280;
+
+  --border-soft:rgba(0,0,0,0.08);
+  --shadow-soft:0 8px 24px rgba(0,0,0,0.08);
+
+  --radius:12px;
+}
+
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg-page);
+  color: var(--text-main);
+}
+
+/* ---------------------------------------------------------
+   Header
+--------------------------------------------------------- */
+.admin-header{
+  background: linear-gradient(135deg, var(--blue-main), var(--blue-dark));
+  color:#fff;
+  padding: 18px 26px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.15);
+}
+
+.admin-header h1{
+  margin:0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+/* NEU: Subline unter dem H1 im Header (ersetzt Inline-Style) */
+.admin-header-sub{
+  margin: 4px 0 0 0;
+  font-size: 14px;
+  line-height: 1.3;
+  opacity: 0.95;
+}
+
+/* ---------------------------------------------------------
+   Layout
+--------------------------------------------------------- */
+.admin-content{
+  max-width: 1100px;
+  margin: 28px auto;
+  padding: 0 20px 40px;
+}
+
+.admin-card{
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  padding: 22px;
+}
+
+.admin-card h2{
+  margin:0 0 6px 0;
+  color: var(--blue-dark);
+  font-size: 20px;
+}
+
+.admin-hint{
+  margin: 0 0 18px 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* NEU: Hinweis-Card (globaler Admin-Hinweis) */
+.admin-note-card{
+  margin-bottom: 18px;
+}
+
+.admin-note-card h2{
+  margin-top: 0;
+}
+
+.admin-note-text{
+  margin: 0;
+  line-height: 1.5;
+  color: var(--text-main);
+}
+
+/* Intro wie “Mini-Hero” im Admin */
+.admin-hero{
+  background: linear-gradient(180deg, rgba(0,80,158,0.08), rgba(0,80,158,0.02));
+  border: 1px solid rgba(0,80,158,0.14);
+  border-radius: 12px;
+  padding: 16px 16px;
+  margin-bottom: 18px;
+}
+
+.admin-hero-title{
+  margin:0;
+  color: var(--blue-dark);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.admin-hero-sub{
+  margin: 6px 0 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ---------------------------------------------------------
+   Subcards / Steps
+--------------------------------------------------------- */
+.admin-flow{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.admin-subcard{
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  background: var(--bg-soft);
+  padding: 16px;
+}
+
+.admin-subcard h3{
+  margin: 0 0 10px 0;
+  color: var(--blue-dark);
+  font-size: 15px;
+}
+
+.admin-subhint{
+  margin: -4px 0 12px 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* NEU: Hinweistext direkt unter "Veröffentlicht" (ersetzt Inline-Style) */
+.admin-inline-note{
+  margin: 8px 0 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+/* ---------------------------------------------------------
+   Forms
+--------------------------------------------------------- */
+.admin-form label{
+  display:block;
+  font-size: 13px;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.admin-form input,
+.admin-form select,
+.admin-form textarea{
+  width:100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border-soft);
+  font-size: 14px;
+  margin-bottom: 12px;
+  background:#fff;
+}
+
+.admin-form input:focus,
+.admin-form select:focus,
+.admin-form textarea:focus{
+  outline:none;
+  border-color: rgba(0,80,158,0.6);
+  box-shadow: 0 0 0 3px rgba(0,80,158,0.12);
+}
+
+/* FIX: Checkbox darf NICHT width:100% bekommen */
+.admin-form input[type="checkbox"]{
+  width:auto;
+  margin:0;
+  box-shadow:none;
+}
+
+.admin-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.admin-inline{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  padding-top: 28px; /* optisch auf Höhe der Inputs */
+}
+
+.admin-inline label{
+  margin:0;
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------
+   Buttons
+--------------------------------------------------------- */
+.admin-actions{
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+button{
+  border:none;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-size: 14px;
+  cursor:pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+/* Primary */
+.btn-primary{
+  background: var(--blue-main);
+  color:#fff;
+}
+.btn-primary:hover{ background: var(--blue-dark); }
+.btn-primary:active{ transform: scale(0.98); }
+
+/* Secondary */
+.btn-secondary{
+  background: #e5ecf6;
+  color: var(--blue-dark);
+}
+.btn-secondary:hover{ background: #d6e4f5; }
+.btn-secondary:active{ transform: scale(0.98); }
+
+/* NEU: Publish Toggle Buttons (schön & klar) */
+.btn-success{
+  background: rgba(16,185,129,0.16);
+  color: #065f46;
+}
+.btn-success:hover{
+  background: rgba(16,185,129,0.24);
+}
+.btn-success:active{ transform: scale(0.98); }
+
+.btn-danger{
+  background: rgba(239,68,68,0.16);
+  color: #7f1d1d;
+}
+.btn-danger:hover{
+  background: rgba(239,68,68,0.24);
+}
+.btn-danger:active{ transform: scale(0.98); }
+
+/* ---------------------------------------------------------
+   Preview
+--------------------------------------------------------- */
+.admin-preview textarea{
+  background: #fff;
+  border: 1px dashed rgba(0,0,0,0.16);
+  min-height: 180px;
+  line-height: 1.45;
+}
+
+/* ---------------------------------------------------------
+   List
+--------------------------------------------------------- */
+#jobsList{ margin-top: 8px; }
+
+.admin-item{
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 14px 14px;
+  margin-bottom: 12px;
+  background: #fff;
+}
+
+.admin-item-title{
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.admin-item-meta{
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.admin-item-actions{
+  display:flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ---------------------------------------------------------
+   Login
+--------------------------------------------------------- */
+.login-wrapper{
+  min-height: 100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 18px;
+}
+
+.login-wrapper form{
+  width: 100%;
+  max-width: 420px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  padding: 26px;
+}
+
+.login-wrapper h1{
+  text-align:center;
+  color: var(--blue-dark);
+  margin: 0 0 18px 0;
+  font-size: 22px;
+}
