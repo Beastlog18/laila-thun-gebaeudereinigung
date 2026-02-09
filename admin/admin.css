@@ -45,6 +45,14 @@ body{
   font-weight: 600;
 }
 
+/* NEU: Subline unter dem H1 im Header (ersetzt Inline-Style) */
+.admin-header-sub{
+  margin: 4px 0 0 0;
+  font-size: 14px;
+  line-height: 1.3;
+  opacity: 0.95;
+}
+
 /* ---------------------------------------------------------
    Layout
 --------------------------------------------------------- */
@@ -71,6 +79,21 @@ body{
   margin: 0 0 18px 0;
   font-size: 14px;
   color: var(--text-muted);
+}
+
+/* NEU: Hinweis-Card (globaler Admin-Hinweis) */
+.admin-note-card{
+  margin-bottom: 18px;
+}
+
+.admin-note-card h2{
+  margin-top: 0;
+}
+
+.admin-note-text{
+  margin: 0;
+  line-height: 1.5;
+  color: var(--text-main);
 }
 
 /* Intro wie “Mini-Hero” im Admin */
@@ -121,6 +144,14 @@ body{
 .admin-subhint{
   margin: -4px 0 12px 0;
   font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* NEU: Hinweistext direkt unter "Veröffentlicht" (ersetzt Inline-Style) */
+.admin-inline-note{
+  margin: 8px 0 0 0;
+  font-size: 13px;
+  line-height: 1.4;
   color: var(--text-muted);
 }
 
@@ -214,6 +245,25 @@ button{
 }
 .btn-secondary:hover{ background: #d6e4f5; }
 .btn-secondary:active{ transform: scale(0.98); }
+
+/* NEU: Publish Toggle Buttons (schön & klar) */
+.btn-success{
+  background: rgba(16,185,129,0.16);
+  color: #065f46;
+}
+.btn-success:hover{
+  background: rgba(16,185,129,0.24);
+}
+.btn-success:active{ transform: scale(0.98); }
+
+.btn-danger{
+  background: rgba(239,68,68,0.16);
+  color: #7f1d1d;
+}
+.btn-danger:hover{
+  background: rgba(239,68,68,0.24);
+}
+.btn-danger:active{ transform: scale(0.98); }
 
 /* ---------------------------------------------------------
    Preview

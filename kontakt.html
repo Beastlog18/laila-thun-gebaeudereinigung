@@ -30,21 +30,30 @@
 <section class="section">
   <h1 class="page-title">Kontakt aufnehmen</h1>
 
+  <p class="page-intro">
+    Sie suchen eine zuverlässige Reinigung für Ihr Unternehmen oder haben ein konkretes Objekt?
+    Schreiben Sie uns kurz, worum es geht – wir melden uns zeitnah zurück und sagen Ihnen ehrlich,
+    was sinnvoll und machbar ist.
+    <br><br>
+    Private Anfragen sind ebenfalls willkommen – je nach Kapazität finden wir auch hier eine passende Lösung.
+  </p>
+
   <form class="contact-form" enctype="multipart/form-data">
-    <label>Name</label>
-    <input type="text" required>
+    <label for="name">Name</label>
+    <input id="name" type="text" required>
 
-    <label>E-Mail</label>
-    <input type="email" required>
+    <label for="email">E-Mail</label>
+    <input id="email" type="email" required>
 
-    <label>Telefon (optional)</label>
-    <input type="text">
+    <label for="phone">Telefon (optional)</label>
+    <input id="phone" type="text">
 
-    <label>Nachricht</label>
-    <textarea rows="6" required></textarea>
+    <label for="message">Nachricht</label>
+    <textarea id="message" rows="6" required
+      placeholder="Worum geht es? Objektart, gewünschter Umfang oder besondere Wünsche…"></textarea>
 
-    <label>Datei / Bild (optional)</label>
-    <input type="file">
+    <label for="file">Datei / Bild (optional)</label>
+    <input id="file" type="file">
 
     <label class="mt-14">
       <input type="checkbox" required>
@@ -55,6 +64,10 @@
     <button class="btn btn-primary btn-block mt-16" type="submit">
       Nachricht senden
     </button>
+
+    <p class="text-small text-muted mt-14 text-center">
+      Wir melden uns in der Regel kurzfristig zurück – persönlich und ohne Weitergabe Ihrer Daten.
+    </p>
   </form>
 </section>
 

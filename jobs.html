@@ -40,7 +40,7 @@
     dass es menschlich passt.
   </p>
 
-  <!-- DYNAMISCHE JOBS (Admin-Ausbau) -->
+  <!-- DYNAMISCHE JOBS (LIVE via Supabase) -->
   <div id="jobsDynamic" class="service-grid"></div>
 
   <!-- INITIATIVBEWERBUNG – IMMER SICHTBAR -->
@@ -91,69 +91,110 @@
   </div>
 </footer>
 
-<script>
-(function () {
-  const STORAGE_KEY = "ltg_jobs_v1";
+<!-- Supabase Client (setzt window.LTGSupabase) -->
+<script src="/api/supabase.client.js"></script>
 
-  function loadJobs() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return [];
-      const data = JSON.parse(raw);
-      return Array.isArray(data) ? data : [];
-    } catch {
-      return [];
-    }
-  }
+<!-- LIVE Jobs aus Supabase -->
+<script type="module">
+  (async function () {
+    "use strict";
 
-  function splitPreview(preview) {
-    const lines = preview.split("\n");
-    return lines.slice(3).join("\n").trim();
-  }
-
-  function buildMeta(job) {
-    const parts = [];
-    if (job.type) parts.push(job.type);
-    if (job.hours) parts.push(job.hours + " Std./Woche");
-    if (job.location) parts.push(job.location);
-    return parts.join(" · ");
-  }
-
-  function render() {
-    const jobs = loadJobs().filter(j => j.published && j.preview);
-    const dyn = document.getElementById("jobsDynamic");
-
-    if (!jobs.length) {
-      dyn.style.display = "none";
-      return;
+    function typeLabel(type) {
+      if (type === "minijob") return "Minijob";
+      if (type === "teilzeit") return "Teilzeit";
+      if (type === "vollzeit") return "Vollzeit";
+      return type || "-";
     }
 
-    dyn.style.display = "grid";
-    dyn.innerHTML = "";
+    function buildMeta(job) {
+      const parts = [];
+      if (job.type) parts.push(typeLabel(job.type));
+      if (job.hours) parts.push(job.hours + " Std./Woche");
+      if (job.location) parts.push(job.location);
+      return parts.join(" · ");
+    }
 
-    jobs.forEach(job => {
-      const card = document.createElement("div");
-      card.className = "service-card";
-      card.style.gridColumn = "1 / -1";
+    function splitPreview(preview) {
+      const lines = String(preview || "").split("\n");
+      // In deinem Preview-Format sind die ersten Zeilen Titel/Meta/Leerzeile.
+      return lines.slice(3).join("\n").trim();
+    }
 
-      const bodyText = splitPreview(job.preview);
-      const meta = buildMeta(job);
+    function buildFallbackText(job) {
+      const blocks = [];
 
-      card.innerHTML = `
-        <h3>${job.title || "Stellenangebot"}</h3>
-        ${meta ? `<p>${meta}</p>` : ""}
-        <pre class="mt-14" style="white-space:pre-wrap;font-family:inherit;">${bodyText}</pre>
-        <div class="mt-14">
-          <a class="btn btn-primary" href="kontakt.html">Jetzt bewerben</a>
-        </div>
-      `;
+      const tasks = String(job.tasks || "").trim();
+      const req = String(job.requirements || "").trim();
+      const ben = String(job.benefits || "").trim();
 
-      dyn.appendChild(card);
-    });
-  }
+      if (tasks) blocks.push("Aufgaben:\n" + tasks);
+      if (req) blocks.push("Anforderungen:\n" + req);
+      if (ben) blocks.push("Wir bieten:\n" + ben);
 
-  document.addEventListener("DOMContentLoaded", render);
-})();
+      const out = blocks.join("\n\n").trim();
+      return out || "";
+    }
+
+    function renderJobs(jobs) {
+      const dyn = document.getElementById("jobsDynamic");
+      if (!dyn) return;
+
+      // BUGFIX: Nicht von preview abhängig machen – published reicht.
+      const published = (jobs || []).filter(j => j && j.published);
+
+      if (!published.length) {
+        dyn.style.display = "none";
+        return;
+      }
+
+      dyn.style.display = "grid";
+      dyn.innerHTML = "";
+
+      published.forEach(job => {
+        const card = document.createElement("div");
+        card.className = "service-card";
+        card.style.gridColumn = "1 / -1";
+
+        const meta = buildMeta(job);
+        const safeTitle = job.title ? String(job.title) : "Stellenangebot";
+
+        const bodyText = job.preview ? splitPreview(job.preview) : buildFallbackText(job);
+
+        card.innerHTML = `
+          <h3>${safeTitle}</h3>
+          ${meta ? `<p>${meta}</p>` : ""}
+          ${bodyText ? `<pre class="mt-14" style="white-space:pre-wrap;font-family:inherit;">${bodyText}</pre>` : ""}
+          <div class="mt-14">
+            <a class="btn btn-primary" href="kontakt.html">Jetzt bewerben</a>
+          </div>
+        `;
+
+        dyn.appendChild(card);
+      });
+    }
+
+    async function init() {
+      try {
+        // Sicherstellen, dass der Client initialisiert ist (Race-Condition vermeiden).
+        if (!window.LTGSupabase || typeof window.LTGSupabase.ensureClient !== "function") {
+          throw new Error("Supabase Client nicht verfügbar (/api/supabase.client.js nicht geladen).");
+        }
+        await window.LTGSupabase.ensureClient();
+
+        const api = await import("/api/jobs.api.js");
+        const jobs = await api.listPublishedJobs();
+        renderJobs(jobs);
+      } catch (e) {
+        // Auf der öffentlichen Seite keine Fehlermeldung anzeigen – einfach keine Jobs rendern.
+        const dyn = document.getElementById("jobsDynamic");
+        if (dyn) dyn.style.display = "none";
+        // Optional zum Debuggen:
+        // console.error(e);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", init);
+  })();
 </script>
 
 </body>
