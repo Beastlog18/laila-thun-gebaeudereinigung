@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Jobs – Laila Thun Gebäudereinigung</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
@@ -71,130 +71,122 @@
       </ul>
 
       <div class="mt-16">
-        <a class="btn btn-primary" href="kontakt.html">Jetzt bewerben</a>
+        <button class="btn btn-primary" type="button" data-apply="Initiativbewerbung (m/w/d)">Jetzt bewerben</button>
       </div>
     </div>
   </div>
 
-  <p class="mt-20 text-small text-muted text-center">
-    Hinweis: Konkrete Stellenangebote sowie ein eigenes Bewerbungsformular
-    (z. B. mit Lebenslauf-Upload) werden im nächsten Ausbauschritt ergänzt.
-  </p>
+  <!-- Status / Fehler -->
+  <div id="jobsStatus" class="mt-16 text-muted"></div>
 </section>
 
 <footer class="footer">
-  <div>© 2026 Laila Thun Gebäudereinigung · Konzept &amp; Gestaltung: Mayk Freund</div>
-  <div class="footer-links">
-    <a href="impressum.html">Impressum</a>
-    <span>·</span>
-    <a href="datenschutz.html">Datenschutz</a>
-  </div>
+  © 2026 Laila Thun Gebäudereinigung – Konzept & Gestaltung: Mayk Freund<br>
+  <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a>
 </footer>
 
-<!-- Supabase Client (setzt window.LTGSupabase) -->
-<script src="/api/supabase.client.js"></script>
+<!-- SCRIPT-REIHENFOLGE: Supabase -> JobsAPI -> UI -->
+<script src="api/supabase.client.js"></script>
+<script src="api/jobs.api.js"></script>
 
-<!-- LIVE Jobs aus Supabase -->
-<script type="module">
-  (async function () {
-    "use strict";
+<script>
+(() => {
+  "use strict";
 
-    function typeLabel(type) {
-      if (type === "minijob") return "Minijob";
-      if (type === "teilzeit") return "Teilzeit";
-      if (type === "vollzeit") return "Vollzeit";
-      return type || "-";
+  const elJobs = document.getElementById("jobsDynamic");
+  const elStatus = document.getElementById("jobsStatus");
+
+  function setStatus(msg) {
+    if (!elStatus) return;
+    elStatus.textContent = msg || "";
+  }
+
+  function escapeHtml(s) {
+    return String(s ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function toBewerbungUrl(jobTitle, jobId) {
+    const params = new URLSearchParams();
+    if (jobTitle) params.set("job_title", jobTitle);
+    if (jobId) params.set("job_id", jobId);
+    // Wichtig: bei dir funktioniert /bewerbung bereits (Pretty URLs). Falls nicht, nimm /bewerbung.html
+    return "/bewerbung?" + params.toString();
+  }
+
+  function renderJobs(list) {
+    elJobs.innerHTML = "";
+
+    if (!Array.isArray(list) || list.length === 0) {
+      // Kein Layout-Drama: einfach nichts anzeigen, Initiativ bleibt sichtbar
+      setStatus("Aktuell sind keine Stellen ausgeschrieben. Du kannst dich gern initiativ bewerben.");
+      return;
     }
 
-    function buildMeta(job) {
-      const parts = [];
-      if (job.type) parts.push(typeLabel(job.type));
-      if (job.hours) parts.push(job.hours + " Std./Woche");
-      if (job.location) parts.push(job.location);
-      return parts.join(" · ");
+    setStatus("");
+
+    for (const job of list) {
+      const title = job.title || "Stelle";
+      const type = job.type || "";
+      const hours = job.hours || "";
+      const location = job.location || "";
+      const preview = job.preview || "";
+
+      const card = document.createElement("div");
+      card.className = "service-card";
+
+      card.innerHTML = `
+        <h3>${escapeHtml(title)}</h3>
+
+        <p class="mt-10 text-muted">
+          ${escapeHtml(type)}${hours ? " · " + escapeHtml(hours) : ""}${location ? " · " + escapeHtml(location) : ""}
+        </p>
+
+        ${preview ? `<div class="mt-14 text-muted" style="white-space: pre-wrap;">${escapeHtml(preview)}</div>` : ""}
+
+        <div class="mt-16">
+          <button class="btn btn-primary" type="button" data-apply="${escapeHtml(title)}" data-job-id="${escapeHtml(job.id || "")}">
+            Jetzt bewerben
+          </button>
+        </div>
+      `;
+
+      elJobs.appendChild(card);
     }
+  }
 
-    function splitPreview(preview) {
-      const lines = String(preview || "").split("\n");
-      // In deinem Preview-Format sind die ersten Zeilen Titel/Meta/Leerzeile.
-      return lines.slice(3).join("\n").trim();
-    }
-
-    function buildFallbackText(job) {
-      const blocks = [];
-
-      const tasks = String(job.tasks || "").trim();
-      const req = String(job.requirements || "").trim();
-      const ben = String(job.benefits || "").trim();
-
-      if (tasks) blocks.push("Aufgaben:\n" + tasks);
-      if (req) blocks.push("Anforderungen:\n" + req);
-      if (ben) blocks.push("Wir bieten:\n" + ben);
-
-      const out = blocks.join("\n\n").trim();
-      return out || "";
-    }
-
-    function renderJobs(jobs) {
-      const dyn = document.getElementById("jobsDynamic");
-      if (!dyn) return;
-
-      // BUGFIX: Nicht von preview abhängig machen – published reicht.
-      const published = (jobs || []).filter(j => j && j.published);
-
-      if (!published.length) {
-        dyn.style.display = "none";
+  async function loadJobs() {
+    try {
+      if (!window.JobsAPI || typeof window.JobsAPI.getPublishedJobs !== "function") {
+        setStatus("Jobs können gerade nicht geladen werden (JobsAPI fehlt).");
         return;
       }
 
-      dyn.style.display = "grid";
-      dyn.innerHTML = "";
-
-      published.forEach(job => {
-        const card = document.createElement("div");
-        card.className = "service-card";
-        card.style.gridColumn = "1 / -1";
-
-        const meta = buildMeta(job);
-        const safeTitle = job.title ? String(job.title) : "Stellenangebot";
-
-        const bodyText = job.preview ? splitPreview(job.preview) : buildFallbackText(job);
-
-        card.innerHTML = `
-          <h3>${safeTitle}</h3>
-          ${meta ? `<p>${meta}</p>` : ""}
-          ${bodyText ? `<pre class="mt-14" style="white-space:pre-wrap;font-family:inherit;">${bodyText}</pre>` : ""}
-          <div class="mt-14">
-            <a class="btn btn-primary" href="kontakt.html">Jetzt bewerben</a>
-          </div>
-        `;
-
-        dyn.appendChild(card);
-      });
+      setStatus("Lade Jobs …");
+      const list = await window.JobsAPI.getPublishedJobs();
+      renderJobs(list);
+    } catch (e) {
+      console.error(e);
+      setStatus("Jobs konnten nicht geladen werden.");
     }
+  }
 
-    async function init() {
-      try {
-        // Sicherstellen, dass der Client initialisiert ist (Race-Condition vermeiden).
-        if (!window.LTGSupabase || typeof window.LTGSupabase.ensureClient !== "function") {
-          throw new Error("Supabase Client nicht verfügbar (/api/supabase.client.js nicht geladen).");
-        }
-        await window.LTGSupabase.ensureClient();
+  document.addEventListener("click", (ev) => {
+    const btn = ev.target && ev.target.closest ? ev.target.closest("[data-apply]") : null;
+    if (!btn) return;
 
-        const api = await import("/api/jobs.api.js");
-        const jobs = await api.listPublishedJobs();
-        renderJobs(jobs);
-      } catch (e) {
-        // Auf der öffentlichen Seite keine Fehlermeldung anzeigen – einfach keine Jobs rendern.
-        const dyn = document.getElementById("jobsDynamic");
-        if (dyn) dyn.style.display = "none";
-        // Optional zum Debuggen:
-        // console.error(e);
-      }
-    }
+    const jobTitle = btn.getAttribute("data-apply") || "";
+    const jobId = btn.getAttribute("data-job-id") || "";
 
-    document.addEventListener("DOMContentLoaded", init);
-  })();
+    window.location.href = toBewerbungUrl(jobTitle, jobId);
+  });
+
+  loadJobs();
+})();
 </script>
 
 </body>
