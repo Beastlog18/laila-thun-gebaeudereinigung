@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jobs – Laila Thun Gebäudereinigung</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="header">
+  <img src="img/Logo.png" class="header-logo" alt="Logo">
+
+  <div class="brand-header">
+    <div class="brand-line1">LAILA THUN</div>
+    <div class="brand-line2">GEBÄUDEREINIGUNG</div>
+    <div class="brand-divider"></div>
+  </div>
+
+  <nav class="nav">
+    <a href="index.html">Home</a>
+    <a href="ueber-uns.html">Über uns</a>
+    <a href="leistungen.html">Leistungen</a>
+    <a href="kontakt.html">Kontakt</a>
+    <a href="jobs.html" class="active">Jobs</a>
+  </nav>
+</header>
+
+<section class="section">
+  <h1 class="page-title">Jobs</h1>
+
+  <p class="page-intro">
+    Wir wachsen – bewusst und Schritt für Schritt.
+    Um unsere gewerblichen Kunden zuverlässig betreuen zu können,
+    bauen wir unser Team weiter aus.
+    <br><br>
+    Wenn du zuverlässig bist, sauber arbeitest und gern im direkten Kontakt mit Menschen stehst,
+    bist du bei uns richtig. Erfahrung ist hilfreich, aber kein Muss – wichtig ist,
+    dass es menschlich passt.
+  </p>
+
+  <!-- DYNAMISCHE JOBS (LIVE via Supabase) -->
+  <div id="jobsDynamic" class="service-grid"></div>
+
+  <!-- INITIATIVBEWERBUNG – IMMER SICHTBAR -->
+  <div class="service-grid mt-20">
+    <div class="service-card" style="grid-column: 1 / -1;">
+      <h3>Initiativbewerbung (m/w/d)</h3>
+
+      <p class="mt-10 text-muted">
+        Wir arbeiten überwiegend im <strong>südlichen Berlin</strong> sowie im <strong>Berliner Umland</strong> –
+        unter anderem in <strong>Großbeeren</strong>, <strong>Wildau</strong>,
+        <strong>Schulzendorf</strong> und rund um <strong>Königs Wusterhausen</strong>.
+        Bei passenden Anfragen sind auch andere Regionen möglich.
+      </p>
+
+      <p class="mt-14">
+        Auch wenn gerade keine konkrete Stelle ausgeschrieben ist,
+        freuen wir uns jederzeit über Menschen, die zu uns passen.
+        <br><br>
+        Sag uns einfach kurz, wann du verfügbar bist, in welcher Region du arbeiten möchtest
+        und ob du bereits Erfahrung in der Reinigung hast.
+      </p>
+
+      <ul class="about-list mt-14">
+        <li>Zuverlässige Einarbeitung und feste Absprachen</li>
+        <li>Persönlicher Kontakt – kein anonymer Großbetrieb</li>
+        <li>Einsatzzeiten nach Absprache</li>
+        <li>Langfristige Zusammenarbeit gewünscht</li>
+      </ul>
+
+      <div class="mt-16">
+        <a class="btn btn-primary" href="kontakt.html">Jetzt bewerben</a>
+      </div>
+    </div>
+  </div>
+
+  <p class="mt-20 text-small text-muted text-center">
+    Hinweis: Konkrete Stellenangebote sowie ein eigenes Bewerbungsformular
+    (z. B. mit Lebenslauf-Upload) werden im nächsten Ausbauschritt ergänzt.
+  </p>
+</section>
+
+<footer class="footer">
+  <div>© 2026 Laila Thun Gebäudereinigung · Konzept &amp; Gestaltung: Mayk Freund</div>
+  <div class="footer-links">
+    <a href="impressum.html">Impressum</a>
+    <span>·</span>
+    <a href="datenschutz.html">Datenschutz</a>
+  </div>
+</footer>
+
+<!-- Supabase Client (setzt window.LTGSupabase) -->
+<script src="/api/supabase.client.js"></script>
+
+<!-- LIVE Jobs aus Supabase -->
+<script type="module">
+  (async function () {
+    "use strict";
+
+    function typeLabel(type) {
+      if (type === "minijob") return "Minijob";
+      if (type === "teilzeit") return "Teilzeit";
+      if (type === "vollzeit") return "Vollzeit";
+      return type || "-";
+    }
+
+    function buildMeta(job) {
+      const parts = [];
+      if (job.type) parts.push(typeLabel(job.type));
+      if (job.hours) parts.push(job.hours + " Std./Woche");
+      if (job.location) parts.push(job.location);
+      return parts.join(" · ");
+    }
+
+    function splitPreview(preview) {
+      const lines = String(preview || "").split("\n");
+      // In deinem Preview-Format sind die ersten Zeilen Titel/Meta/Leerzeile.
+      return lines.slice(3).join("\n").trim();
+    }
+
+    function buildFallbackText(job) {
+      const blocks = [];
+
+      const tasks = String(job.tasks || "").trim();
+      const req = String(job.requirements || "").trim();
+      const ben = String(job.benefits || "").trim();
+
+      if (tasks) blocks.push("Aufgaben:\n" + tasks);
+      if (req) blocks.push("Anforderungen:\n" + req);
+      if (ben) blocks.push("Wir bieten:\n" + ben);
+
+      const out = blocks.join("\n\n").trim();
+      return out || "";
+    }
+
+    function renderJobs(jobs) {
+      const dyn = document.getElementById("jobsDynamic");
+      if (!dyn) return;
+
+      // BUGFIX: Nicht von preview abhängig machen – published reicht.
+      const published = (jobs || []).filter(j => j && j.published);
+
+      if (!published.length) {
+        dyn.style.display = "none";
+        return;
+      }
+
+      dyn.style.display = "grid";
+      dyn.innerHTML = "";
+
+      published.forEach(job => {
+        const card = document.createElement("div");
+        card.className = "service-card";
+        card.style.gridColumn = "1 / -1";
+
+        const meta = buildMeta(job);
+        const safeTitle = job.title ? String(job.title) : "Stellenangebot";
+
+        const bodyText = job.preview ? splitPreview(job.preview) : buildFallbackText(job);
+
+        card.innerHTML = `
+          <h3>${safeTitle}</h3>
+          ${meta ? `<p>${meta}</p>` : ""}
+          ${bodyText ? `<pre class="mt-14" style="white-space:pre-wrap;font-family:inherit;">${bodyText}</pre>` : ""}
+          <div class="mt-14">
+            <a class="btn btn-primary" href="kontakt.html">Jetzt bewerben</a>
+          </div>
+        `;
+
+        dyn.appendChild(card);
+      });
+    }
+
+    async function init() {
+      try {
+        // Sicherstellen, dass der Client initialisiert ist (Race-Condition vermeiden).
+        if (!window.LTGSupabase || typeof window.LTGSupabase.ensureClient !== "function") {
+          throw new Error("Supabase Client nicht verfügbar (/api/supabase.client.js nicht geladen).");
+        }
+        await window.LTGSupabase.ensureClient();
+
+        const api = await import("/api/jobs.api.js");
+        const jobs = await api.listPublishedJobs();
+        renderJobs(jobs);
+      } catch (e) {
+        // Auf der öffentlichen Seite keine Fehlermeldung anzeigen – einfach keine Jobs rendern.
+        const dyn = document.getElementById("jobsDynamic");
+        if (dyn) dyn.style.display = "none";
+        // Optional zum Debuggen:
+        // console.error(e);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", init);
+  })();
+</script>
+
+</body>
+</html>
