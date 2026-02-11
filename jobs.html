@@ -71,15 +71,63 @@
       </ul>
 
       <div class="mt-16">
-        <a class="btn btn-primary" href="kontakt.html">Jetzt bewerben</a>
+        <button class="btn btn-primary" type="button" data-apply="Initiativbewerbung (m/w/d)">Jetzt bewerben</button>
       </div>
     </div>
   </div>
 
-  <p class="mt-20 text-small text-muted text-center">
-    Hinweis: Konkrete Stellenangebote sowie ein eigenes Bewerbungsformular
-    (z. B. mit Lebenslauf-Upload) werden im nächsten Ausbauschritt ergänzt.
-  </p>
+  <!-- BEWERBUNGSFORMULAR (einblendbar, keine neue Seite) -->
+  <div id="applicationWrap" class="service-grid mt-20" hidden>
+    <div class="service-card" style="grid-column: 1 / -1;">
+      <h3 id="applicationTitle">Bewerbung</h3>
+
+      <p class="mt-10 text-muted" id="applicationSubtitle">
+        Bitte fülle das Formular aus. Wir melden uns zeitnah zurück.
+      </p>
+
+      <form id="applicationForm" class="mt-14">
+        <input type="hidden" id="appJobTitle" name="job_title" value="">
+
+        <div class="mt-10">
+          <label class="text-small"><strong>Name *</strong></label><br>
+          <input id="appName" type="text" required autocomplete="name" style="width:100%;max-width:640px;">
+        </div>
+
+        <div class="mt-10">
+          <label class="text-small"><strong>E-Mail *</strong></label><br>
+          <input id="appEmail" type="email" required autocomplete="email" style="width:100%;max-width:640px;">
+        </div>
+
+        <div class="mt-10">
+          <label class="text-small"><strong>Telefon</strong></label><br>
+          <input id="appPhone" type="tel" autocomplete="tel" style="width:100%;max-width:640px;">
+        </div>
+
+        <div class="mt-10">
+          <label class="text-small"><strong>Region / Ort</strong></label><br>
+          <input id="appRegion" type="text" placeholder="z. B. Königs Wusterhausen / Wildau / Berlin" style="width:100%;max-width:640px;">
+        </div>
+
+        <div class="mt-10">
+          <label class="text-small"><strong>Verfügbarkeit</strong></label><br>
+          <input id="appAvailability" type="text" placeholder="z. B. ab sofort, vormittags, abends, 2–3 Tage/Woche" style="width:100%;max-width:640px;">
+        </div>
+
+        <div class="mt-10">
+          <label class="text-small"><strong>Nachricht *</strong></label><br>
+          <textarea id="appMessage" required rows="6" style="width:100%;max-width:900px;"></textarea>
+        </div>
+
+        <div class="mt-14">
+          <button id="appSubmitBtn" class="btn btn-primary" type="submit">Bewerbung absenden</button>
+          <button id="appCloseBtn" class="btn" type="button">Schließen</button>
+        </div>
+
+        <p id="appStatus" class="mt-14 text-small text-muted" style="display:none;"></p>
+      </form>
+    </div>
+  </div>
+
 </section>
 
 <footer class="footer">
@@ -91,12 +139,15 @@
   </div>
 </footer>
 
-<!-- Supabase Client (setzt window.LTGSupabase) -->
+<!-- 1) Supabase Client (setzt window.LTGSupabase) -->
 <script src="/api/supabase.client.js"></script>
 
-<!-- LIVE Jobs aus Supabase -->
-<script type="module">
-  (async function () {
+<!-- 2) Jobs API (setzt window.JobsAPI) -->
+<script src="/api/jobs.api.js"></script>
+
+<!-- 3) LIVE Jobs + Bewerbung (UI) -->
+<script>
+  (function () {
     "use strict";
 
     function typeLabel(type) {
@@ -111,36 +162,102 @@
       if (job.type) parts.push(typeLabel(job.type));
       if (job.hours) parts.push(job.hours + " Std./Woche");
       if (job.location) parts.push(job.location);
+      if (!job.location && job.region) parts.push(job.region); // defensiv
       return parts.join(" · ");
     }
 
     function splitPreview(preview) {
       const lines = String(preview || "").split("\n");
-      // In deinem Preview-Format sind die ersten Zeilen Titel/Meta/Leerzeile.
       return lines.slice(3).join("\n").trim();
     }
 
     function buildFallbackText(job) {
       const blocks = [];
-
       const tasks = String(job.tasks || "").trim();
       const req = String(job.requirements || "").trim();
-      const ben = String(job.benefits || "").trim();
+      const ben = String(job.benefits || job.weOffer || "").trim();
 
       if (tasks) blocks.push("Aufgaben:\n" + tasks);
       if (req) blocks.push("Anforderungen:\n" + req);
       if (ben) blocks.push("Wir bieten:\n" + ben);
 
-      const out = blocks.join("\n\n").trim();
-      return out || "";
+      return blocks.join("\n\n").trim();
     }
 
+    // ---- Bewerbung UI ----
+    const wrap = document.getElementById("applicationWrap");
+    const form = document.getElementById("applicationForm");
+    const titleEl = document.getElementById("applicationTitle");
+    const subtitleEl = document.getElementById("applicationSubtitle");
+    const jobTitleInput = document.getElementById("appJobTitle");
+
+    const nameEl = document.getElementById("appName");
+    const emailEl = document.getElementById("appEmail");
+    const phoneEl = document.getElementById("appPhone");
+    const regionEl = document.getElementById("appRegion");
+    const availEl = document.getElementById("appAvailability");
+    const msgEl = document.getElementById("appMessage");
+
+    const submitBtn = document.getElementById("appSubmitBtn");
+    const closeBtn = document.getElementById("appCloseBtn");
+    const statusEl = document.getElementById("appStatus");
+
+    function showStatus(text, isError) {
+      if (!statusEl) return;
+      statusEl.style.display = "block";
+      statusEl.textContent = text;
+      statusEl.style.color = isError ? "#7f1d1d" : "";
+    }
+
+    function openApplication(jobTitle) {
+      const jt = String(jobTitle || "Initiativbewerbung").trim();
+      if (wrap) wrap.hidden = false;
+
+      if (titleEl) titleEl.textContent = "Bewerbung";
+      if (subtitleEl) subtitleEl.textContent = "Stelle: " + jt;
+
+      if (jobTitleInput) jobTitleInput.value = jt;
+
+      if (statusEl) {
+        statusEl.style.display = "none";
+        statusEl.textContent = "";
+      }
+
+      setTimeout(() => {
+        wrap.scrollIntoView({ behavior: "smooth", block: "start" });
+        if (nameEl) nameEl.focus();
+      }, 50);
+    }
+
+    function closeApplication() {
+      if (wrap) wrap.hidden = true;
+      if (form) form.reset();
+      if (jobTitleInput) jobTitleInput.value = "";
+      if (statusEl) {
+        statusEl.style.display = "none";
+        statusEl.textContent = "";
+      }
+    }
+
+    document.addEventListener("click", (e) => {
+      const t = e.target;
+      if (!t) return;
+
+      const btn = t.closest && t.closest("[data-apply]");
+      if (btn) {
+        e.preventDefault();
+        openApplication(btn.getAttribute("data-apply"));
+      }
+    });
+
+    if (closeBtn) closeBtn.addEventListener("click", closeApplication);
+
+    // ---- Jobs rendern ----
     function renderJobs(jobs) {
       const dyn = document.getElementById("jobsDynamic");
       if (!dyn) return;
 
-      // BUGFIX: Nicht von preview abhängig machen – published reicht.
-      const published = (jobs || []).filter(j => j && j.published);
+      const published = (jobs || []).filter(j => j && (j.published === true || j.published === "true"));
 
       if (!published.length) {
         dyn.style.display = "none";
@@ -157,7 +274,6 @@
 
         const meta = buildMeta(job);
         const safeTitle = job.title ? String(job.title) : "Stellenangebot";
-
         const bodyText = job.preview ? splitPreview(job.preview) : buildFallbackText(job);
 
         card.innerHTML = `
@@ -165,7 +281,7 @@
           ${meta ? `<p>${meta}</p>` : ""}
           ${bodyText ? `<pre class="mt-14" style="white-space:pre-wrap;font-family:inherit;">${bodyText}</pre>` : ""}
           <div class="mt-14">
-            <a class="btn btn-primary" href="kontakt.html">Jetzt bewerben</a>
+            <button class="btn btn-primary" type="button" data-apply="${safeTitle}">Jetzt bewerben</button>
           </div>
         `;
 
@@ -175,21 +291,59 @@
 
     async function init() {
       try {
-        // Sicherstellen, dass der Client initialisiert ist (Race-Condition vermeiden).
         if (!window.LTGSupabase || typeof window.LTGSupabase.ensureClient !== "function") {
           throw new Error("Supabase Client nicht verfügbar (/api/supabase.client.js nicht geladen).");
         }
         await window.LTGSupabase.ensureClient();
 
-        const api = await import("/api/jobs.api.js");
-        const jobs = await api.listPublishedJobs();
+        if (!window.JobsAPI || typeof window.JobsAPI.getPublishedJobs !== "function") {
+          throw new Error("JobsAPI nicht verfügbar (/api/jobs.api.js nicht geladen).");
+        }
+
+        const jobs = await window.JobsAPI.getPublishedJobs();
         renderJobs(jobs);
+
+        if (form) {
+          form.addEventListener("submit", async (ev) => {
+            ev.preventDefault();
+
+            const payload = {
+              job_title: (jobTitleInput && jobTitleInput.value ? jobTitleInput.value : "Initiativbewerbung").trim(),
+              name: (nameEl && nameEl.value ? nameEl.value : "").trim(),
+              email: (emailEl && emailEl.value ? emailEl.value : "").trim(),
+              phone: (phoneEl && phoneEl.value ? phoneEl.value : "").trim(),
+              region: (regionEl && regionEl.value ? regionEl.value : "").trim(),
+              availability: (availEl && availEl.value ? availEl.value : "").trim(),
+              message: (msgEl && msgEl.value ? msgEl.value : "").trim(),
+              source: "jobs.html",
+              created_at: new Date().toISOString()
+            };
+
+            if (!payload.name || !payload.email || !payload.message) {
+              showStatus("Bitte fülle Name, E-Mail und Nachricht aus.", true);
+              return;
+            }
+
+            submitBtn.disabled = true;
+            const oldText = submitBtn.textContent;
+            submitBtn.textContent = "Wird gesendet...";
+
+            try {
+              await window.JobsAPI.submitApplication(payload);
+              showStatus("Vielen Dank! Deine Bewerbung wurde gesendet. Wir melden uns zeitnah.", false);
+              form.reset();
+              if (jobTitleInput) jobTitleInput.value = payload.job_title;
+            } catch (err) {
+              showStatus("Senden fehlgeschlagen. Bitte versuche es später erneut oder nutze die Kontaktseite.", true);
+            } finally {
+              submitBtn.disabled = false;
+              submitBtn.textContent = oldText;
+            }
+          });
+        }
       } catch (e) {
-        // Auf der öffentlichen Seite keine Fehlermeldung anzeigen – einfach keine Jobs rendern.
         const dyn = document.getElementById("jobsDynamic");
         if (dyn) dyn.style.display = "none";
-        // Optional zum Debuggen:
-        // console.error(e);
       }
     }
 

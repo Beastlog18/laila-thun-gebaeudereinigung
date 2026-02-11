@@ -1,72 +1,87 @@
-// api/jobs.api.js
-"use strict";
+/* api/jobs.api.js
+   Public Jobs API + Bewerbung absenden (Edge Function)
 
-async function requireClient() {
-  const supa = window.LTGSupabase;
-  if (!supa || typeof supa.ensureClient !== "function") {
-    throw new Error("Supabase client not initialized");
+   - Lädt veröffentlichte Jobs aus Supabase (Table: public.job_postings)
+   - Sendet Bewerbungen an Edge Function: send-application
+   - Keine Service-Keys im Frontend! (nur anon-key über supabase.client.js)
+*/
+(() => {
+  "use strict";
+
+  function requireSupabase() {
+    if (!window.LTGSupabase || typeof window.LTGSupabase.ensureClient !== "function") {
+      throw new Error("Supabase client missing. Prüfe: supabase.client.js ist geladen.");
+    }
+    return window.LTGSupabase.ensureClient();
   }
 
-  // WICHTIG: immer ensureClient() verwenden (Race-Condition vermeiden)
-  const client = await supa.ensureClient();
-  if (!client) throw new Error("Supabase client not initialized");
-  return client;
-}
+  function normalizeJob(row) {
+    // Wir lassen bewusst viele mögliche Feldnamen zu, weil dein Schema variieren kann.
+    // jobs.html rendert defensiv.
+    return {
+      id: row.id ?? row.job_id ?? row.slug ?? null,
+      title: row.title ?? row.job_title ?? row.jobrole ?? "",
+      type: row.type ?? row.art ?? row.employment_type ?? "",
+      hours: row.hours_per_week ?? row.hours ?? row.stunden_pro_woche ?? null,
+      region: row.region ?? row.location ?? row.ort_region ?? "",
+      tasks: row.tasks ?? row.aufgaben ?? "",
+      requirements: row.requirements ?? row.anforderungen ?? "",
+      weOffer: row.we_offer ?? row.offer ?? row.wir_bieten ?? "",
+      contact: row.contact ?? row.contact_email ?? row.kontakt ?? "",
+      published: row.published ?? row.is_published ?? row.veroeffentlicht ?? false,
+      created_at: row.created_at ?? null
+    };
+  }
 
-export async function listPublishedJobs() {
-  const client = await requireClient();
-  const { data, error } = await client
-    .from("jobs")
-    .select("*")
-    .eq("published", true)
-    .order("created_at", { ascending: false });
+  async function getPublishedJobs() {
+    const supa = await requireSupabase();
 
-  if (error) throw error;
-  return data;
-}
+    // Wichtig: Table heißt bei dir sehr wahrscheinlich "job_postings"
+    // published-Flag kann heißen: published / is_published / veroeffentlicht
+    // -> wir versuchen erst "is_published", dann fallback "published".
+    let res = await supa
+      .from("job_postings")
+      .select("*")
+      .eq("is_published", true)
+      .order("created_at", { ascending: false });
 
-export async function listAllJobsAdmin() {
-  const client = await requireClient();
-  const { data, error } = await client
-    .from("jobs")
-    .select("*")
-    .order("created_at", { ascending: false });
+    if (res.error) {
+      // fallback: anderes published-field
+      res = await supa
+        .from("job_postings")
+        .select("*")
+        .eq("published", true)
+        .order("created_at", { ascending: false });
+    }
 
-  if (error) throw error;
-  return data;
-}
+    if (res.error) throw new Error(res.error.message);
 
-export async function createJob(payload) {
-  const client = await requireClient();
-  const { data, error } = await client
-    .from("jobs")
-    .insert(payload)
-    .select()
-    .single();
+    const rows = Array.isArray(res.data) ? res.data : [];
+    return rows.map(normalizeJob);
+  }
 
-  if (error) throw error;
-  return data;
-}
+  async function submitApplication(payload) {
+    const supa = await requireSupabase();
 
-export async function updateJob(id, payload) {
-  const client = await requireClient();
-  const { data, error } = await client
-    .from("jobs")
-    .update(payload)
-    .eq("id", id)
-    .select()
-    .single();
+    // Edge Function Invoke (Supabase kümmert sich um URL + apikey Header)
+    const { data, error } = await supa.functions.invoke("send-application", {
+      body: payload
+    });
 
-  if (error) throw error;
-  return data;
-}
+    if (error) {
+      // Supabase liefert oft nur "FunctionsHttpError" -> wir geben sinnvoller zurück
+      throw new Error(error.message || "Bewerbung konnte nicht gesendet werden.");
+    }
 
-export async function deleteJob(id) {
-  const client = await requireClient();
-  const { error } = await client
-    .from("jobs")
-    .delete()
-    .eq("id", id);
+    if (data && data.error) {
+      throw new Error(data.error);
+    }
 
-  if (error) throw error;
-}
+    return data;
+  }
+
+  window.JobsAPI = {
+    getPublishedJobs,
+    submitApplication
+  };
+})();
