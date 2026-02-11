@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bewerbung – Laila Thun Gebäudereinigung</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="header">
+  <img src="img/Logo.png" class="header-logo" alt="Logo">
+
+  <div class="brand-header">
+    <div class="brand-line1">LAILA THUN</div>
+    <div class="brand-line2">GEBÄUDEREINIGUNG</div>
+    <div class="brand-divider"></div>
+  </div>
+
+  <nav class="nav">
+    <a href="index.html">Home</a>
+    <a href="ueber-uns.html">Über uns</a>
+    <a href="leistungen.html">Leistungen</a>
+    <a href="kontakt.html">Kontakt</a>
+    <a href="jobs.html" class="active">Jobs</a>
+  </nav>
+</header>
+
+<section class="section">
+  <h1 class="page-title">Bewerbung</h1>
+
+  <p class="page-intro" id="jobInfo">
+    Bitte fülle das Formular aus. Wir melden uns zeitnah zurück.
+  </p>
+
+  <div class="service-grid mt-20">
+    <div class="service-card" style="grid-column: 1 / -1;">
+      <h3 id="jobTitleH3">Stelle: —</h3>
+
+      <form id="appForm" class="mt-14" novalidate>
+        <!-- Job -->
+        <input type="hidden" id="jobId" value="">
+        <input type="hidden" id="jobTitle" value="">
+
+        <div class="mt-10">
+          <label class="text-small"><strong>Name *</strong></label><br>
+          <input id="name" type="text" required autocomplete="name" style="width:100%;max-width:640px;">
+        </div>
+
+        <div class="mt-10">
+          <label class="text-small"><strong>E-Mail *</strong></label><br>
+          <input id="email" type="email" required autocomplete="email" style="width:100%;max-width:640px;">
+        </div>
+
+        <div class="mt-10">
+          <label class="text-small"><strong>Telefon</strong></label><br>
+          <input id="phone" type="tel" autocomplete="tel" style="width:100%;max-width:640px;">
+        </div>
+
+        <div class="mt-10">
+          <label class="text-small"><strong>Region / Ort</strong></label><br>
+          <input id="region" type="text" placeholder="z. B. Königs Wusterhausen / Wildau / Berlin" style="width:100%;max-width:640px;">
+        </div>
+
+        <div class="mt-10">
+          <label class="text-small"><strong>Verfügbarkeit</strong></label><br>
+          <input id="availability" type="text" placeholder="z. B. ab sofort, vormittags, abends, 2–3 Tage/Woche" style="width:100%;max-width:640px;">
+        </div>
+
+        <div class="mt-10">
+          <label class="text-small"><strong>Nachricht *</strong></label><br>
+          <textarea id="message" required rows="6" style="width:100%;max-width:900px;"></textarea>
+        </div>
+
+        <div class="mt-14">
+          <label class="text-small"><strong>Lebenslauf (PDF/DOC/DOCX/JPG/PNG) *</strong></label><br>
+          <input id="resume" type="file" required accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="width:100%;max-width:640px;">
+          <p class="text-small text-muted mt-10">Max. 10 MB. Upload ist privat (nur per Link abrufbar).</p>
+        </div>
+
+        <div class="mt-14">
+          <label class="text-small"><strong>Anschreiben (optional)</strong></label><br>
+          <input id="cover" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style="width:100%;max-width:640px;">
+        </div>
+
+        <div class="mt-14">
+          <label class="text-small" style="display:flex;gap:10px;align-items:flex-start;max-width:900px;">
+            <input id="consent" type="checkbox" required style="margin-top:4px;">
+            <span>
+              Ich willige ein, dass meine Angaben zum Zweck der Bewerbung verarbeitet werden.
+              Weitere Infos in der <a href="datenschutz.html" target="_blank" rel="noopener">Datenschutzerklärung</a>.
+              *
+            </span>
+          </label>
+        </div>
+
+        <div class="mt-14">
+          <button id="submitBtn" class="btn btn-primary" type="submit">Bewerbung absenden</button>
+          <a class="btn" href="jobs.html" style="text-decoration:none;display:inline-block;">Zurück zu Jobs</a>
+        </div>
+
+        <p id="status" class="mt-14 text-small text-muted" style="display:none;"></p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div>© 2026 Laila Thun Gebäudereinigung · Konzept &amp; Gestaltung: Mayk Freund</div>
+  <div class="footer-links">
+    <a href="impressum.html">Impressum</a>
+    <span>·</span>
+    <a href="datenschutz.html">Datenschutz</a>
+  </div>
+</footer>
+
+<!-- Supabase Client -->
+<script src="/api/supabase.client.js"></script>
+
+<script>
+  (function () {
+    "use strict";
+
+    const BUCKET = "job-applications";
+    const MAX_BYTES = 10 * 1024 * 1024;
+
+    const els = {
+      jobInfo: document.getElementById("jobInfo"),
+      jobTitleH3: document.getElementById("jobTitleH3"),
+      jobId: document.getElementById("jobId"),
+      jobTitle: document.getElementById("jobTitle"),
+
+      form: document.getElementById("appForm"),
+      name: document.getElementById("name"),
+      email: document.getElementById("email"),
+      phone: document.getElementById("phone"),
+      region: document.getElementById("region"),
+      availability: document.getElementById("availability"),
+      message: document.getElementById("message"),
+      resume: document.getElementById("resume"),
+      cover: document.getElementById("cover"),
+      consent: document.getElementById("consent"),
+      submitBtn: document.getElementById("submitBtn"),
+      status: document.getElementById("status")
+    };
+
+    function qs() {
+      const p = new URLSearchParams(location.search);
+      return {
+        job_id: (p.get("job_id") || "").trim(),
+        job_title: (p.get("job_title") || "").trim()
+      };
+    }
+
+    function showStatus(text, isError) {
+      els.status.style.display = "block";
+      els.status.textContent = text;
+      els.status.style.color = isError ? "#7f1d1d" : "";
+    }
+
+    function safeFileName(name) {
+      return String(name || "file")
+        .replace(/[^\w.\-]+/g, "_")
+        .replace(/_+/g, "_")
+        .slice(0, 80);
+    }
+
+    function extFromName(name) {
+      const n = String(name || "");
+      const i = n.lastIndexOf(".");
+      return i > -1 ? n.slice(i).toLowerCase() : "";
+    }
+
+    function assertFile(file, required) {
+      if (!file) {
+        if (required) throw new Error("Bitte Lebenslauf auswählen.");
+        return;
+      }
+      if (file.size > MAX_BYTES) throw new Error("Datei ist zu groß (max. 10 MB).");
+    }
+
+    async function getSupabase() {
+      if (!window.LTGSupabase || typeof window.LTGSupabase.ensureClient !== "function") {
+        throw new Error("Supabase Client fehlt (/api/supabase.client.js).");
+      }
+      await window.LTGSupabase.ensureClient();
+      const client = window.LTGSupabase.getClient();
+      if (!client) throw new Error("Supabase Client nicht initialisiert.");
+      return client;
+    }
+
+    async function uploadFile(supabase, folder, file) {
+      const ext = extFromName(file.name);
+      const fileName = safeFileName(file.name || "upload" + ext);
+      const path = folder + "/" + fileName;
+
+      const { error } = await supabase.storage
+        .from(BUCKET)
+        .upload(path, file, { upsert: false, contentType: file.type || "application/octet-stream" });
+
+      if (error) throw new Error("Upload fehlgeschlagen: " + error.message);
+      return path;
+    }
+
+    async function initJobContext() {
+      const q = qs();
+      els.jobId.value = q.job_id;
+      els.jobTitle.value = q.job_title;
+
+      // Fallback-Text
+      let title = q.job_title || "Initiativbewerbung (m/w/d)";
+      els.jobTitleH3.textContent = "Stelle: " + title;
+
+      // Wenn job_id da ist, Jobtitel live ziehen (Single Source of Truth)
+      if (q.job_id) {
+        try {
+          const supabase = await getSupabase();
+          const { data, error } = await supabase
+            .from("jobs")
+            .select("id,title")
+            .eq("id", q.job_id)
+            .maybeSingle();
+
+          if (!error && data && data.title) {
+            title = String(data.title);
+            els.jobTitle.value = title;
+            els.jobTitleH3.textContent = "Stelle: " + title;
+          }
+        } catch (_) {
+          // kein harter Fehler: Seite bleibt nutzbar
+        }
+      }
+
+      if (els.jobInfo) {
+        els.jobInfo.innerHTML =
+          'Du bewirbst dich auf: <strong>' + title + '</strong><br><br>' +
+          'Bitte fülle das Formular aus. Wir melden uns zeitnah zurück.';
+      }
+    }
+
+    async function onSubmit(ev) {
+      ev.preventDefault();
+
+      try {
+        // Basis-Checks
+        const name = (els.name.value || "").trim();
+        const email = (els.email.value || "").trim();
+        const message = (els.message.value || "").trim();
+
+        if (!name || !email || !message) {
+          showStatus("Bitte fülle Name, E-Mail und Nachricht aus.", true);
+          return;
+        }
+
+        if (!els.consent.checked) {
+          showStatus("Bitte DSGVO-Einwilligung bestätigen.", true);
+          return;
+        }
+
+        const resumeFile = els.resume.files && els.resume.files[0] ? els.resume.files[0] : null;
+        const coverFile = els.cover.files && els.cover.files[0] ? els.cover.files[0] : null;
+
+        assertFile(resumeFile, true);
+        assertFile(coverFile, false);
+
+        const supabase = await getSupabase();
+
+        // Upload-Ordner: yyyy-mm/<uuid>
+        const today = new Date().toISOString().slice(0, 7);
+        const uuid = (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now());
+        const folder = today + "/" + uuid;
+
+        els.submitBtn.disabled = true;
+        const oldText = els.submitBtn.textContent;
+        els.submitBtn.textContent = "Wird gesendet...";
+
+        showStatus("Upload läuft…", false);
+
+        // Uploads
+        const resume_path = await uploadFile(supabase, folder, resumeFile);
+        let cover_letter_path = "";
+        if (coverFile) cover_letter_path = await uploadFile(supabase, folder, coverFile);
+
+        showStatus("Sende Bewerbung…", false);
+
+        const payload = {
+          job_id: (els.jobId.value || "").trim() || undefined,
+          job_title: (els.jobTitle.value || "Initiativbewerbung (m/w/d)").trim(),
+
+          name,
+          email,
+          phone: (els.phone.value || "").trim(),
+          region: (els.region.value || "").trim(),
+          availability: (els.availability.value || "").trim(),
+          message,
+
+          resume_path,
+          cover_letter_path: cover_letter_path || undefined,
+
+          source: "bewerbung.html",
+          consent: true
+        };
+
+        const { data, error } = await supabase.functions.invoke("send-application", { body: payload });
+
+        if (error) {
+          throw new Error(error.message || "Senden fehlgeschlagen.");
+        }
+        if (data && data.error) {
+          throw new Error(String(data.error));
+        }
+
+        showStatus("Vielen Dank! Deine Bewerbung wurde gesendet. Wir melden uns zeitnah.", false);
+        els.form.reset();
+
+      } catch (e) {
+        showStatus(String(e && e.message ? e.message : e), true);
+      } finally {
+        els.submitBtn.disabled = false;
+        els.submitBtn.textContent = "Bewerbung absenden";
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      initJobContext();
+      els.form.addEventListener("submit", onSubmit);
+    });
+  })();
+</script>
+
+</body>
+</html>
