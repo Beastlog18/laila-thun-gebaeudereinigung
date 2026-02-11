@@ -21,7 +21,7 @@
     // Draft debounce
     draftTimer: null,
 
-    // Legacy
+    // NEU: API cache
     api: null
   };
 
@@ -34,141 +34,41 @@
      Supabase API (NEU)
      ========================= */
 
-  async function ensureDb() {
+  async function ensureApi() {
+    if (state.api) return state.api;
+
     if (!window.LTGSupabase || typeof window.LTGSupabase.ensureClient !== "function") {
       throw new Error("Supabase Client nicht verfügbar (LTGSupabase fehlt).");
     }
-    return await window.LTGSupabase.ensureClient();
-  }
 
-  function mapRowToJob(row) {
-    return {
-      id: row.id ?? row.job_id ?? row.slug ?? null,
-      title: row.title ?? row.job_title ?? row.jobrole ?? "",
-      type: row.type ?? row.art ?? row.employment_type ?? "",
-      hours: row.hours_per_week ?? row.hours ?? row.stunden_pro_woche ?? "",
-      location: row.location ?? row.region ?? row.ort_region ?? "",
-      tasks: row.tasks ?? row.aufgaben ?? "",
-      requirements: row.requirements ?? row.anforderungen ?? "",
-      benefits: row.we_offer ?? row.offer ?? row.wir_bieten ?? row.benefits ?? "",
-      contact: row.contact ?? row.contact_email ?? row.kontakt ?? "",
-      published: row.is_published ?? row.published ?? row.veroeffentlicht ?? false,
-      preview: row.preview ?? "",
-      created_at: row.created_at ?? null
-    };
-  }
+    await window.LTGSupabase.ensureClient();
 
-  // Hilfsfunktion: versucht nacheinander mehrere Supabase-Operationen (Fallbacks bei abweichendem Schema)
-  async function tryOps(ops) {
-    let lastErr = null;
-    for (const op of ops) {
-      const res = await op();
-      if (!res || !res.error) return res;
-      lastErr = res.error;
-    }
-    throw new Error(lastErr?.message || "DB-Operation fehlgeschlagen.");
+    // Wichtig: absoluter Pfad, damit es in /admin/ korrekt lädt
+state.api = await import("../../api/jobs.api.js");
+    if (!state.api) throw new Error("jobs.api.js konnte nicht geladen werden.");
+
+    return state.api;
   }
 
   async function loadJobs() {
-    const supa = await ensureDb();
-
-    const res = await tryOps([
-      () => supa.from("job_postings").select("*").order("created_at", { ascending: false }),
-    ]);
-
-    const rows = Array.isArray(res.data) ? res.data : [];
-    return rows.map(mapRowToJob);
+    const api = await ensureApi();
+    const data = await api.listAllJobsAdmin();
+    return Array.isArray(data) ? data : [];
   }
 
   async function createJobDb(payload) {
-    const supa = await ensureDb();
-
-    const rowPrimary = {
-      title: payload.title,
-      type: payload.type,
-      hours_per_week: payload.hours || null,
-      location: payload.location,
-      tasks: payload.tasks,
-      requirements: payload.requirements,
-      we_offer: payload.benefits,
-      contact: payload.contact,
-      is_published: !!payload.published,
-      preview: payload.preview || null,
-      created_at: nowIso()
-    };
-
-    const rowFallback = {
-      title: payload.title,
-      type: payload.type,
-      hours: payload.hours || null,
-      region: payload.location,
-      tasks: payload.tasks,
-      requirements: payload.requirements,
-      benefits: payload.benefits,
-      contact: payload.contact,
-      published: !!payload.published,
-      preview: payload.preview || null,
-      created_at: nowIso()
-    };
-
-    const res = await tryOps([
-      () => supa.from("job_postings").insert([rowPrimary]).select("*").single(),
-      () => supa.from("job_postings").insert([rowFallback]).select("*").single(),
-    ]);
-
-    return mapRowToJob(res.data || {});
+    const api = await ensureApi();
+    return await api.createJob(payload);
   }
 
   async function updateJobDb(id, payload) {
-    const supa = await ensureDb();
-    if (!id) throw new Error("updateJobDb: id fehlt.");
-
-    const patchPrimary = {
-      title: payload.title,
-      type: payload.type,
-      hours_per_week: payload.hours || null,
-      location: payload.location,
-      tasks: payload.tasks,
-      requirements: payload.requirements,
-      we_offer: payload.benefits,
-      contact: payload.contact,
-      is_published: !!payload.published,
-      preview: payload.preview || null
-    };
-
-    const patchFallback = {
-      title: payload.title,
-      type: payload.type,
-      hours: payload.hours || null,
-      region: payload.location,
-      tasks: payload.tasks,
-      requirements: payload.requirements,
-      benefits: payload.benefits,
-      contact: payload.contact,
-      published: !!payload.published,
-      preview: payload.preview || null
-    };
-
-    const res = await tryOps([
-      () => supa.from("job_postings").update(patchPrimary).eq("id", id).select("*").single(),
-      () => supa.from("job_postings").update(patchPrimary).eq("job_id", id).select("*").single(),
-      () => supa.from("job_postings").update(patchFallback).eq("id", id).select("*").single(),
-      () => supa.from("job_postings").update(patchFallback).eq("job_id", id).select("*").single(),
-    ]);
-
-    return mapRowToJob(res.data || {});
+    const api = await ensureApi();
+    return await api.updateJob(id, payload);
   }
 
   async function deleteJobDb(id) {
-    const supa = await ensureDb();
-    if (!id) throw new Error("deleteJobDb: id fehlt.");
-
-    await tryOps([
-      () => supa.from("job_postings").delete().eq("id", id),
-      () => supa.from("job_postings").delete().eq("job_id", id),
-    ]);
-
-    return true;
+    const api = await ensureApi();
+    return await api.deleteJob(id);
   }
 
   /* =========================
@@ -320,110 +220,213 @@
       const data = JSON.parse(raw);
       if (!data || typeof data !== "object") return null;
       return data;
-    } catch (_) {
+    } catch {
       return null;
     }
   }
 
-  function writeDraft(payload) {
-    try {
-      sessionStorage.setItem(DRAFT_KEY, JSON.stringify(payload));
-    } catch (_) {}
+  function clearDraft() {
+    try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
   }
 
-  function clearDraft() {
-    try { sessionStorage.removeItem(DRAFT_KEY); } catch (_) {}
+  function snapshotForm() {
+    return {
+      editingId: state.editingId || null,
+      fields: {
+        jobTitle: safeText(els.jobTitle?.value),
+        jobTitleFree: safeText(els.jobTitleFree?.value),
+        jobTitleExtra: safeText(els.jobTitleExtra?.value),
+        jobType: safeText(els.jobType?.value),
+        jobHours: safeText(els.jobHours?.value),
+        jobLocation: safeText(els.jobLocation?.value),
+        jobTasks: safeText(els.jobTasks?.value),
+        jobReq: safeText(els.jobReq?.value),
+        jobBenefits: safeText(els.jobBenefits?.value),
+        jobContact: safeText(els.jobContact?.value),
+        jobPublished: !!els.jobPublished?.checked
+      },
+      updatedAt: nowIso()
+    };
+  }
+
+  function writeDraftNow() {
+    try {
+      if (!state.isDirty) return;
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify(snapshotForm()));
+    } catch {
+      // ignore
+    }
   }
 
   function scheduleDraftSave() {
+    if (state.suppressDirty) return;
     if (state.draftTimer) window.clearTimeout(state.draftTimer);
     state.draftTimer = window.setTimeout(() => {
-      state.draftTimer = null;
-      saveDraftNow();
+      writeDraftNow();
     }, DRAFT_SAVE_DEBOUNCE_MS);
   }
 
-  function saveDraftNow() {
-    try {
-      const job = getFormData();
-      writeDraft({
-        editingId: state.editingId,
-        job
-      });
-    } catch (_) {}
-  }
-
   function restoreDraftIfAvailable() {
-    const d = readDraft();
-    if (!d || !d.job) return;
-
-    // nur restore, wenn aktuell noch nix eingegeben wurde
-    const hasAny =
-      safeText(els.jobHours?.value) ||
-      safeText(els.jobLocation?.value) ||
-      safeText(els.jobTasks?.value) ||
-      safeText(els.jobReq?.value) ||
-      safeText(els.jobBenefits?.value) ||
-      safeText(els.jobContact?.value);
-
-    if (hasAny) return;
+    const draft = readDraft();
+    if (!draft || !draft.fields) return false;
 
     state.suppressDirty = true;
-    state.editingId = d.editingId || null;
 
-    setFormData(d.job);
+    state.editingId = draft.editingId || null;
+
+    if (els.jobTitle) els.jobTitle.value = draft.fields.jobTitle || "";
+    if (els.jobTitleFree) els.jobTitleFree.value = draft.fields.jobTitleFree || "";
+    if (els.jobTitleExtra) els.jobTitleExtra.value = draft.fields.jobTitleExtra || "";
+    if (els.jobType) els.jobType.value = draft.fields.jobType || "";
+    if (els.jobHours) els.jobHours.value = draft.fields.jobHours || "";
+    if (els.jobLocation) els.jobLocation.value = draft.fields.jobLocation || "";
+    if (els.jobTasks) els.jobTasks.value = draft.fields.jobTasks || "";
+    if (els.jobReq) els.jobReq.value = draft.fields.jobReq || "";
+    if (els.jobBenefits) els.jobBenefits.value = draft.fields.jobBenefits || "";
+    if (els.jobContact) els.jobContact.value = draft.fields.jobContact || "";
+    if (els.jobPublished) els.jobPublished.checked = !!draft.fields.jobPublished;
+
+    updateFreeRoleUi();
+
+    if (els.jobPreview) els.jobPreview.value = buildPreview(getFormData());
 
     state.suppressDirty = false;
+
     setDirty(true);
-    notify("Entwurf wiederhergestellt (Reload-Schutz).", "warn");
+
+    if (els.jobSaveBtn) {
+      els.jobSaveBtn.textContent = state.editingId ? "Änderungen speichern *" : "Job speichern *";
+    }
+
+    notify("Entwurf wiederhergestellt (nach Reload). Bitte speichern oder zurücksetzen.", "warn");
+    return true;
   }
 
   /* =========================
-     Content helpers
+     Autotext: robuste Defaults
      ========================= */
 
-  function bulletsOrDefault(text, kind) {
-    const arr = splitLines(text);
-    if (arr.length) return arr;
+  const PLACEHOLDERS = new Set([
+    "alles","viel","egal","nix","nichts","-","ok","ka","k.a.","kp","n/a","tbd",
+    "putze","putzen","putzen...","hilfe","arbeit","job","sonstiges",
+    "test","asdf","qwe"
+  ]);
 
-    if (kind === "tasks") {
-      return [
-        "Reinigung von Treppenhäusern, Büros oder Objekten nach Plan",
-        "Sorgfältiger Umgang mit Material und Ausstattung",
-        "Dokumentation nach Bedarf"
-      ];
-    }
-    if (kind === "requirements") {
-      return [
-        "Zuverlässigkeit und Pünktlichkeit",
-        "Sorgfältige Arbeitsweise",
-        "Freundliches Auftreten"
-      ];
-    }
-    if (kind === "benefits") {
-      return [
-        "Feste Absprachen und Einarbeitung",
-        "Arbeitszeiten nach Absprache",
-        "Langfristige Zusammenarbeit"
-      ];
-    }
-    return ["–"];
-  }
+  const DEFAULTS = {
+    tasks: [
+      "Unterhaltsreinigung bei Kunden (Böden, Oberflächen, Sanitärbereiche)",
+      "Sorgfältiges Arbeiten nach Plan und Absprache",
+      "Auffüllen von Verbrauchsmaterial nach Bedarf",
+      "Ordnung halten und Hinweise weitergeben"
+    ],
+    requirements: [
+      "Führerschein (PKW) und Mobilität",
+      "Zuverlässigkeit und Pünktlichkeit",
+      "Sorgfalt und Blick für Sauberkeit",
+      "Freundliches Auftreten",
+      "Selbstständige Arbeitsweise und Teamfähigkeit"
+    ],
+    benefits: [
+      "Planbare Arbeitszeiten",
+      "Faire Bezahlung",
+      "Gründliche Einarbeitung",
+      "Familiäres Team",
+      "Arbeitskleidung wird gestellt"
+    ]
+  };
 
   function norm(s) {
     return safeText(s)
       .toLowerCase()
-      .replace(/ä/g, "ae")
-      .replace(/ö/g, "oe")
-      .replace(/ü/g, "ue")
-      .replace(/ß/g, "ss")
-      .replace(/[^a-z0-9]+/g, " ")
+      .replace(/[^\p{L}\p{N}\s\+]/gu, "")
+      .replace(/\s+/g, " ")
       .trim();
   }
 
-  function titleCaseLocation(s) {
-    return safeText(s)
-      .split(/\s+/)
+  function isPlaceholderLine(line) {
+    const n = norm(line);
+    if (!n) return true;
+    if (PLACEHOLDERS.has(n)) return true;
+    if (n.startsWith("putz")) return true;
+    if (n === "alles andere" || n === "und alles" || n === "und alles andere") return true;
+    return false;
+  }
+
+  function cleanAllesTail(s) {
+    const lower = s.toLowerCase();
+    const idx = lower.indexOf("alles");
+    if (idx === -1) return { before: s.trim(), hadAlles: false };
+    return { before: s.slice(0, idx).trim(), hadAlles: true };
+  }
+
+  function bulletsOrDefault(rawText, kind) {
+    const items = splitLines(rawText);
+
+    const extras = [];
+
+    items.forEach(line => {
+      const n = norm(line);
+      if (!n) return;
+
+      if (n.includes("alles")) {
+        const { before } = cleanAllesTail(line);
+        if (before && !isPlaceholderLine(before)) {
+          extras.push(
+            kind === "requirements"
+              ? `${before} (erforderlich oder wünschenswert)`
+              : before
+          );
+        }
+        return;
+      }
+
+      if (!isPlaceholderLine(line)) {
+        extras.push(line);
+      }
+    });
+
+    const combined = [];
+    extras.forEach(x => combined.push(x));
+    DEFAULTS[kind].forEach(d => combined.push(d));
+
+    const seen = new Set();
+    const out = combined.filter(x => {
+      const k = norm(x);
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+
+    return out.length ? out : DEFAULTS[kind].slice();
+  }
+
+  /* =========================
+     TITEL-LOGIK (Dropdown + Freitext + Zusatz)
+     ========================= */
+
+  function buildTitle(role, extra) {
+    const base = safeText(role) || "Reinigungskraft Gebäudereinigung (m/w/d)";
+    const add = safeText(extra);
+
+    if (!add) return base;
+    if (isPlaceholderLine(add)) return base;
+
+    return `${base} – ${add}`;
+  }
+
+  /* =========================
+     ORT/REGION Normalisierung
+     ========================= */
+
+  function titleCaseLocation(input) {
+    const s = safeText(input);
+    if (!s) return "";
+
+    const cleaned = s.replace(/\s+/g, " ").trim();
+
+    return cleaned
+      .toLowerCase()
+      .split(" ")
       .filter(Boolean)
       .map(w => w.charAt(0).toUpperCase() + w.slice(1))
       .join(" ");
@@ -442,15 +445,6 @@
     }
 
     return titleCaseLocation(raw);
-  }
-
-  function buildTitle(role, extra) {
-    const r = safeText(role);
-    const e = safeText(extra);
-    if (!r && !e) return "";
-    if (!r) return e;
-    if (!e) return r;
-    return `${r} – ${e}`;
   }
 
   function getSelectedOrFreeRole() {
