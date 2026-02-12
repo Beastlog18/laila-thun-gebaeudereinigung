@@ -40,10 +40,8 @@
     dass es menschlich passt.
   </p>
 
-  <!-- DYNAMISCHE JOBS (LIVE via Supabase) -->
   <div id="jobsDynamic" class="service-grid"></div>
 
-  <!-- INITIATIVBEWERBUNG – IMMER SICHTBAR -->
   <div class="service-grid mt-20">
     <div class="service-card" style="grid-column: 1 / -1;">
       <h3>Initiativbewerbung (m/w/d)</h3>
@@ -76,7 +74,6 @@
     </div>
   </div>
 
-  <!-- Status / Fehler -->
   <div id="jobsStatus" class="mt-16 text-muted"></div>
 </section>
 
@@ -85,7 +82,6 @@
   <a href="impressum.html">Impressum</a> · <a href="datenschutz.html">Datenschutz</a>
 </footer>
 
-<!-- SCRIPT-REIHENFOLGE: Supabase -> JobsAPI -> UI -->
 <script src="api/supabase.client.js"></script>
 <script src="api/jobs.api.js"></script>
 
@@ -110,19 +106,63 @@
       .replace(/'/g, "&#039;");
   }
 
+  // Admin-Text: Zeile 1 = Titel, Zeile 2 = Meta, Rest = Body
+  function splitAdminPreview(text) {
+    const lines = String(text ?? "")
+      .split(/\r?\n/)
+      .map(l => l.trim())
+      .filter(l => l.length > 0);
+
+    const title = lines[0] || "";
+    const meta = lines[1] || "";
+    const body = lines.slice(2).join("\n");
+
+    return { title, meta, body };
+  }
+
+  // Headings im Fließtext optisch hervorheben (ohne CSS-Änderung)
+  function highlightHeadings(body) {
+    const headingSet = new Set([
+      "Deine Aufgaben:",
+      "Deine Aufgaben",
+      "Das wünschen wir uns:",
+      "Das wünschen wir uns",
+      "Das bieten wir dir:",
+      "Das bieten wir dir"
+    ]);
+
+    const out = [];
+    const lines = String(body ?? "").split(/\r?\n/);
+
+    for (const raw of lines) {
+      const line = raw.trim();
+      if (!line) {
+        out.push(""); // Absatz/Leerzeile beibehalten
+        continue;
+      }
+
+      if (headingSet.has(line)) {
+        out.push("**" + line + "**");
+      } else {
+        out.push(line);
+      }
+    }
+
+    return out.join("\n");
+  }
+
   function toBewerbungUrl(jobTitle, jobId) {
     const params = new URLSearchParams();
     if (jobTitle) params.set("job_title", jobTitle);
     if (jobId) params.set("job_id", jobId);
-    // Wichtig: bei dir funktioniert /bewerbung bereits (Pretty URLs). Falls nicht, nimm /bewerbung.html
-    return "/bewerbung?" + params.toString();
+    // LiveServer/dateibasiert:
+    return "bewerbung.html?" + params.toString();
   }
 
   function renderJobs(list) {
     elJobs.innerHTML = "";
 
     if (!Array.isArray(list) || list.length === 0) {
-      // Kein Layout-Drama: einfach nichts anzeigen, Initiativ bleibt sichtbar
       setStatus("Aktuell sind keine Stellen ausgeschrieben. Du kannst dich gern initiativ bewerben.");
       return;
     }
@@ -130,26 +170,37 @@
     setStatus("");
 
     for (const job of list) {
-      const title = job.title || "Stelle";
-      const type = job.type || "";
-      const hours = job.hours || "";
-      const location = job.location || "";
-      const preview = job.preview || "";
+      const admin = splitAdminPreview(job.preview || "");
+
+      // Fallbacks falls Admin-Text leer/unsauber wäre (ohne separate Meta-Zeile zu erzwingen)
+      const title = admin.title || job.title || "Stelle";
+      let meta = admin.meta || "";
+      if (!meta) {
+        const type = job.type || "";
+        const hours = job.hours || "";
+        const location = job.location || "";
+        meta = [type, hours, location].filter(Boolean).join(" · ");
+      }
+
+      const body = highlightHeadings(admin.body || "");
 
       const card = document.createElement("div");
       card.className = "service-card";
 
+      // Body: **Heading** -> <strong>Heading</strong> (nur textbasiert, keine HTML aus Admin)
+      const safeBody = escapeHtml(body).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+
       card.innerHTML = `
         <h3>${escapeHtml(title)}</h3>
 
-        <p class="mt-10 text-muted">
-          ${escapeHtml(type)}${hours ? " · " + escapeHtml(hours) : ""}${location ? " · " + escapeHtml(location) : ""}
-        </p>
+        ${meta ? `<p class="mt-10 text-muted">${escapeHtml(meta)}</p>` : ""}
 
-        ${preview ? `<div class="mt-14 text-muted" style="white-space: pre-wrap;">${escapeHtml(preview)}</div>` : ""}
+        ${body ? `<div class="mt-14 text-muted" style="white-space: pre-wrap;">${safeBody}</div>` : ""}
 
         <div class="mt-16">
-          <button class="btn btn-primary" type="button" data-apply="${escapeHtml(title)}" data-job-id="${escapeHtml(job.id || "")}">
+          <button class="btn btn-primary" type="button"
+            data-apply="${escapeHtml(title)}"
+            data-job-id="${escapeHtml(job.id || "")}">
             Jetzt bewerben
           </button>
         </div>
@@ -176,7 +227,7 @@
   }
 
   document.addEventListener("click", (ev) => {
-    const btn = ev.target && ev.target.closest ? ev.target.closest("[data-apply]") : null;
+    const btn = ev.target.closest("[data-apply]");
     if (!btn) return;
 
     const jobTitle = btn.getAttribute("data-apply") || "";

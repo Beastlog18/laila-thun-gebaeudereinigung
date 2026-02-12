@@ -249,6 +249,29 @@ body {
 }
 
 /* --------------------------------------------- */
+/* JOBS (NUR JOBS.HTML)                           */
+/* Fix: 1 Job darf nicht nur 1/3 Breite nehmen    */
+/* + Einheitlich: Karte bleibt zentriert          */
+/* + Blocksatz nur für den langen Textblock       */
+/* --------------------------------------------- */
+
+#jobsDynamic.service-grid {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+}
+
+/* Einheitlich lassen: KEIN left-align auf der ganzen Karte */
+#jobsDynamic.service-grid .service-card {
+  text-align: center;
+}
+
+/* Nur der lange Fließtext (preview) im Blocksatz.
+   In jobs.html ist das der div mit style "white-space: pre-wrap;" */
+#jobsDynamic.service-grid .service-card div[style*="white-space: pre-wrap"] {
+  text-align: justify;
+  text-align-last: left;
+}
+
+/* --------------------------------------------- */
 /* ÜBER UNS                                     */
 /* --------------------------------------------- */
 
