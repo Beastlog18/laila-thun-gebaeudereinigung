@@ -1,0 +1,2 @@
+[functions.send-anfrage]
+verify_jwt = false
