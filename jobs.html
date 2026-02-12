@@ -22,7 +22,7 @@
     <a href="index.html">Home</a>
     <a href="ueber-uns.html">Über uns</a>
     <a href="leistungen.html">Leistungen</a>
-    <a href="kontakt.html">Kontakt</a>
+    <a href="anfrage.html">Kontakt & Angebot</a>
     <a href="jobs.html" class="active">Jobs</a>
   </nav>
 </header>
@@ -86,6 +86,7 @@
 <script src="api/jobs.api.js"></script>
 
 <script>
+/* --- Original JS unverändert --- */
 (() => {
   "use strict";
 
@@ -106,7 +107,6 @@
       .replace(/'/g, "&#039;");
   }
 
-  // Admin-Text: Zeile 1 = Titel, Zeile 2 = Meta, Rest = Body
   function splitAdminPreview(text) {
     const lines = String(text ?? "")
       .split(/\r?\n/)
@@ -120,7 +120,6 @@
     return { title, meta, body };
   }
 
-  // Headings im Fließtext optisch hervorheben (ohne CSS-Änderung)
   function highlightHeadings(body) {
     const headingSet = new Set([
       "Deine Aufgaben:",
@@ -137,7 +136,7 @@
     for (const raw of lines) {
       const line = raw.trim();
       if (!line) {
-        out.push(""); // Absatz/Leerzeile beibehalten
+        out.push("");
         continue;
       }
 
@@ -155,7 +154,6 @@
     const params = new URLSearchParams();
     if (jobTitle) params.set("job_title", jobTitle);
     if (jobId) params.set("job_id", jobId);
-    // LiveServer/dateibasiert:
     return "bewerbung.html?" + params.toString();
   }
 
@@ -171,8 +169,6 @@
 
     for (const job of list) {
       const admin = splitAdminPreview(job.preview || "");
-
-      // Fallbacks falls Admin-Text leer/unsauber wäre (ohne separate Meta-Zeile zu erzwingen)
       const title = admin.title || job.title || "Stelle";
       let meta = admin.meta || "";
       if (!meta) {
@@ -183,20 +179,14 @@
       }
 
       const body = highlightHeadings(admin.body || "");
-
       const card = document.createElement("div");
       card.className = "service-card";
-
-      // Body: **Heading** -> <strong>Heading</strong> (nur textbasiert, keine HTML aus Admin)
       const safeBody = escapeHtml(body).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
 
       card.innerHTML = `
         <h3>${escapeHtml(title)}</h3>
-
         ${meta ? `<p class="mt-10 text-muted">${escapeHtml(meta)}</p>` : ""}
-
         ${body ? `<div class="mt-14 text-muted" style="white-space: pre-wrap;">${safeBody}</div>` : ""}
-
         <div class="mt-16">
           <button class="btn btn-primary" type="button"
             data-apply="${escapeHtml(title)}"

@@ -12,7 +12,7 @@
     <div>
       <h1>Admin Dashboard</h1>
       <p class="admin-header-sub">
-        Arbeitsstand: Admin Phase 0.4 · nicht live · Änderungen wirken lokal
+        Arbeitsstand: Admin Phase 0.4 · Live-Anbindung aktiv (Supabase) · Änderungen wirken nach Speichern/Veröffentlichen
       </p>
     </div>
     <button id="logoutBtn" type="button" class="btn-secondary">Logout</button>
@@ -23,9 +23,8 @@
     <section class="admin-card admin-note-card" aria-label="Hinweis">
       <h2>Hinweis</h2>
       <p class="admin-note-text">
-        Dieser Admin-Bereich ist ein internes Arbeits- und Vorbereitungswerkzeug.
-        Es gibt <strong>keine</strong> Live-Anbindung an die öffentliche Webseite.
-        Änderungen und Status gelten <strong>nur lokal</strong> in diesem Browser.
+        Dieser Admin-Bereich ist das interne Pflege-Tool. Änderungen werden in der Datenbank (Supabase) gespeichert.
+        Veröffentlichte Jobs können dadurch auf der öffentlichen Webseite sichtbar werden.
       </p>
     </section>
 
@@ -131,7 +130,7 @@
             </div>
 
             <p class="admin-inline-note">
-              Hinweis: Dieser Status gilt nur im Admin (lokal). Es erfolgt keine Live-Veröffentlichung auf der öffentlichen Webseite.
+              Hinweis: Wenn „Veröffentlicht“ aktiv ist und gespeichert wurde, kann der Job auf der öffentlichen Webseite sichtbar werden.
             </p>
 
             <div class="admin-actions">

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kontakt & Angebot – Laila Thun Gebäudereinigung</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="header">
+  <img src="img/Logo.png" class="header-logo" alt="Logo">
+
+  <div class="brand-header">
+    <div class="brand-line1">LAILA THUN</div>
+    <div class="brand-line2">GEBÄUDEREINIGUNG</div>
+    <div class="brand-divider"></div>
+  </div>
+
+  <nav class="nav">
+    <a href="index.html">Home</a>
+    <a href="ueber-uns.html">Über uns</a>
+    <a href="leistungen.html">Leistungen</a>
+    <a href="anfrage.html">Kontakt & Angebot</a>
+    <a href="jobs.html">Jobs</a>
+  </nav>
+</header>
+
+<section class="section">
+  <h1 class="page-title">Kontakt & Angebot</h1>
+
+  <p class="page-intro">
+    Wähle kurz aus, worum es geht – wir melden uns zeitnah zurück und sagen dir ehrlich,
+    was sinnvoll und machbar ist.
+  </p>
+
+  <form id="anfrageForm" class="contact-form" enctype="multipart/form-data">
+    <label>Worum geht es?</label>
+    <select id="requestType" required>
+      <option value="">Bitte wählen…</option>
+      <option value="kontakt">Kontaktaufnahme</option>
+      <option value="angebot">Angebot anfragen</option>
+    </select>
+
+    <div id="offerFields" style="display:none;">
+      <label>Art der Reinigung</label>
+      <select id="serviceType">
+        <option value="">Bitte wählen…</option>
+        <option>Unterhaltsreinigung</option>
+        <option>Glas- & Fensterreinigung</option>
+        <option>Büroreinigung</option>
+        <option>Grundreinigung</option>
+        <option>Sanitärreinigung</option>
+        <option>Treppenhausreinigung</option>
+        <option>Sonstiges</option>
+      </select>
+
+      <label>Adresse / Ort (optional)</label>
+      <input id="location" type="text" placeholder="z. B. Königs Wusterhausen, Berlin">
+    </div>
+
+    <label for="name">Name</label>
+    <input id="name" type="text" required>
+
+    <label for="email">E-Mail</label>
+    <input id="email" type="email" required>
+
+    <label for="phone">Telefon (optional)</label>
+    <input id="phone" type="text">
+
+    <label for="message">Nachricht / Beschreibung</label>
+    <textarea id="message" rows="6" required
+      placeholder="Worum geht es? Objektart, gewünschter Umfang, Zeitraum oder besondere Wünsche…"></textarea>
+
+    <div id="offerUploads" style="display:none;">
+      <label for="files">Dateien / Bilder (optional)</label>
+      <input id="files" type="file" multiple>
+      <p class="text-small text-muted mt-8">
+        Hinweis: Uploads werden als Download-Links (zeitlich begrenzt) an die Anfrage-Mail angehängt.
+      </p>
+    </div>
+
+    <label class="mt-14">
+      <input id="privacy" type="checkbox" required>
+      Ich habe die <a href="datenschutz.html" target="_blank">Datenschutzerklärung</a> gelesen
+      und stimme der Verarbeitung meiner Daten zu.
+    </label>
+
+    <button id="submitBtn" class="btn btn-primary btn-block mt-16" type="submit">
+      Anfrage senden
+    </button>
+
+    <div id="formStatus" class="mt-14 text-center text-muted" aria-live="polite"></div>
+  </form>
+</section>
+
+<footer class="footer">
+  <div>© 2026 Laila Thun Gebäudereinigung · Konzept & Gestaltung: Mayk Freund</div>
+  <div class="footer-links">
+    <a href="impressum.html">Impressum</a>
+    <span>·</span>
+    <a href="datenschutz.html">Datenschutz</a>
+  </div>
+</footer>
+
+<!-- Supabase Client MUSS vor script.js geladen werden -->
+<script src="api/supabase.client.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>
